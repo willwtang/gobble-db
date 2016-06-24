@@ -1,4 +1,6 @@
 const utility = require('./utility');
+const db = require('./db');
+process.env.DB_NAME = 'test';
 
 class Schema {
   constructor(tableName) {
@@ -42,7 +44,7 @@ class Schema {
 
 // ################################################# CONSTRAINTS ##################################################
 
-  foreignKey(constraintName, columns, referenceTable, referenceColumns) {
+  foreignKey(constraintName, columns, referenceTable, referenceColumns, onUpdateOrDelete) {
     const colVarType = utility.type(columns);
     if (colVarType === 'array') {
       for (let i = 0; i < columns.length; i++) {
@@ -53,7 +55,7 @@ class Schema {
       if (!this.columns.hasOwnProperty(columns)) throw new Error(`Can\'t add foreign key to column ${columns[i]}, which does not exist`);
       this.columns[columns].foreignKey = true;
     }
-    this.foreignKeys.push({ name: constraintName, type: 'FOREIGN KEY', referenceTable, referenceColumns, columns });
+    this.foreignKeys.push({ name: constraintName, type: 'FOREIGN KEY', referenceTable, referenceColumns, columns, onUpdateOrDelete });
   }
 
   primaryKey(constraintName, ...columns) {
@@ -113,26 +115,51 @@ class Schema {
   }
 
   _parseForeignKeys() {
-    this.queue = this.foreignKeys.map(obj => `CONSTRAINT ${obj.name} ${obj.type}(${utility.type(obj.columns) === 'array' ? obj.columns.join(',') : columns}) REFERENCES ${obj.referenceTable}(${utility.type(obj.referenceColumns) === 'array'})`);
+    this.queue = this.foreignKeys.map(obj => {
+      let query = `ADD CONSTRAINT ${obj.name} ${obj.type}(${this._arrayOrString(obj.columns)}) REFERENCES ${obj.referenceTable}(${this._arrayOrString(obj.referenceColumns)})`;
+      if (obj.onUpdateOrDelete) {
+        if (obj.onUpdateOrDelete.hasOwnProperty('onUpdate')) {
+          query += `ON UPDATE ${obj.onUpdateOrDelete.onUpdate}`;
+        }
+        if (obj.onUpdateOrDelete.hasOwnProperty('onDelete')) {
+          query += `ON DELETE ${obj.onUpdateOrDelete.onDelete}`;
+        }
+      }
+      return query;
+    });
+  }
+
+  _arrayOrString(obj) {
+    if (utility.type(obj) === 'array') {
+      return obj.join(' ');
+    }
+    return obj;
   }
 
   end() {
     this._parseQueries();
     this._parseConstraints();
     this._parseForeignKeys();
-    console.log(this.queries.join(','), this.foreignKeys.join(','));
-    db.query(`CREATE TABLE IF NOT EXISTS ${this.tableName} (${this.queries.join(',')});`)
-    .then(() => {
-      const ALTER_TABLE = `ALTER TABLE ${this.tableName} ADD`;
-      const dbQueries = [];
-      for (let i = 0; i < this.queue.length; i++) {
-        dbQueries.push(db.query(`${ALTER_TABLE} ${sb.queue[i]}`));
-      }
-      // Makes sure all asynchronous promises have returned before moving on
-      return Promise.all(dbQueries);
-    })
-    .catch(err => console.log(err));
-    return Model.bind(null, this.tableName, this.schema);
+    const createTableQuery = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${this.queries.join(',')});`;
+    const ALTER_TABLE = `ALTER TABLE ${this.tableName}`;
+    const queueQueries = this.queue.map(query => `${ALTER_TABLE} ${query}`);
+    db.getConnection()
+      .then(conn => conn.query(`USE ${process.env.DB_NAME}`).then(() => conn))
+      .then(conn => conn.query(createTableQuery).then(() => conn))
+      .then(conn => {
+        const dbQueries = [];
+        for (let i = 0; i < queueQueries.length; i++) {
+          dbQueries.push(conn.query(queueQueries[i]));
+        }
+        // Makes sure all asynchronous promises have returned before moving on
+        return Promise.all(dbQueries).then(() => conn);
+      })
+      .then(conn => db.release(conn))
+      .catch((err, conn) => {
+        console.log(err, conn);
+        throw new Error('Schema creation query error');
+      });
+    // return Model.bind(null, this.tableName, this.schema);
   }
 }
 
@@ -153,33 +180,6 @@ class Schema {
 }());
 
 
-  // NUMBER TYPES
-  // int(column, width, ...rest) {
-  //   return this._generic(column, int.name.toUpperCase(), width, rest);
-  // }
-
-  // bigInt(column, width, ...rest) {
-  //   return this._generic(column, 'BIGINT', width, rest);
-  // }
-
-  // tinyInt(column, width, ...rest) {
-  //   return this._generic(column, 'TINYINT', width, rest);
-  // }
-
-  // // STRING TYPES
-  // varChar(column, width, ...rest) {
-  //   this._generic(column, 'VARCHAR', width, rest);
-  // }
-
-  // text(column, width, ...rest) {
-  //   return this._generic(column, 'TEXT', width, rest);
-  // }
-
-  // decimal(column, width, ...rest) {
-  //   return this._generic(column, 'DECIMAL', width, rest);
-  // }
-
-
 class Table {
   constructor(tableName, callback) {
     const schema = new Schema(tableName);
@@ -188,15 +188,23 @@ class Table {
   }
 }
 
+module.exports = Table;
+
+// ################################################# TESTS BELOW ##################################################
+
 const User = new Table('User', user => {
   user.bigInt('facebookId', 64, 'UNSIGNED');
   user.varChar('email', 255);
   user.varChar('firstName', 255);
   user.varChar('lastName', 255);
   user.primaryKey('User_primaryKey', 'facebookId');
-  user.foreignKey('User_email', 'email', 'Email', 'email');
   user.timestamp();
 });
 
-module.exports = Table;
+const Product = new Table('Product', product => {
+  product.bigInt('upc', 64, 'UNSIGNED');
+  product.bigInt('User_facebookId', 64, 'UNSIGNED');
+  product.foreignKey('fk_Product_User_facebookId', 'User_facebookId', 'User', 'facebookId');
+});
+
 

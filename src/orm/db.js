@@ -1,15 +1,19 @@
-const mysql = require('mysql');
+const mysql = require('promise-mysql');
 
-class Connection {
+class Pool {
   constructor(details) {
-    const connection = mysql.createConnection(details);
-    this.getConnection = () => connection;
+    const connection = mysql.createPool(details);
+    this.getConnection = () => connection.getConnection();
+    this.release = conn => connection.releaseConnection(conn);
   }
 }
 
-const host = process.env.HOST;
-const user = process.env.DB_USER;
-const password = process.env.DB_PASSWORD;
-const database = test;
+const host = process.env.HOST || '127.0.0.1';
+const user = process.env.DB_USER || 'root';
+const password = process.env.DB_PASSWORD || 'abc';
+const database = 'test';
 
-module.exports = new Connection({ host, user, password, database });
+const pool = new Pool({ host, user, password, database });
+
+pool.getConnection().then(conn => conn.query('START TRANSACTION;')).then(res => console.log(res));
+module.exports = pool;
