@@ -1,6 +1,7 @@
 const utility = require('./utility');
 const db = require('./db');
 process.env.DB_NAME = 'test';
+console.log(db.database);
 
 class Schema {
   constructor(tableName) {
@@ -59,7 +60,8 @@ class Schema {
   }
 
   primaryKey(constraintName, ...columns) {
-    this.constraints[constraintName] = { name: constraintName, type: 'PRIMARY KEY', columns };
+    if (!columns.length) columns[0] = this.current.name;
+    this.constraints[constraintName] = { name: constraintName || `${this.tableName}_pk`, type: 'PRIMARY KEY', columns };
     for (let i = 0; i < columns.length; i++) {
       if (!this.columns.hasOwnProperty(columns[i])) throw new Error(`Can\'t add primary key to column ${columns[i]}, which does not exist`);
       this.columns[columns[i]].primaryKey = true;
@@ -143,22 +145,9 @@ class Schema {
     const createTableQuery = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${this.queries.join(',')});`;
     const ALTER_TABLE = `ALTER TABLE ${this.tableName}`;
     const queueQueries = this.queue.map(query => `${ALTER_TABLE} ${query}`);
-    db.getConnection()
-      .then(conn => conn.query(`USE ${process.env.DB_NAME}`).then(() => conn))
-      .then(conn => conn.query(createTableQuery).then(() => conn))
-      .then(conn => {
-        const dbQueries = [];
-        for (let i = 0; i < queueQueries.length; i++) {
-          dbQueries.push(conn.query(queueQueries[i]));
-        }
-        // Makes sure all asynchronous promises have returned before moving on
-        return Promise.all(dbQueries).then(() => conn);
-      })
-      .then(conn => db.release(conn))
-      .catch((err, conn) => {
-        console.log(err, conn);
-        throw new Error('Schema creation query error');
-      });
+
+    return { createTableQuery, queueQueries };
+
     // return Model.bind(null, this.tableName, this.schema);
   }
 }
@@ -179,12 +168,50 @@ class Schema {
   }
 }());
 
+const tableCreations = [];
 
 class Table {
-  constructor(tableName, callback) {
+  constructor(tableName, callback, debugging) {
+    this.tableName = tableName;
     const schema = new Schema(tableName);
     callback(schema);
-    return schema.end();
+    const { createTableQuery, queueQueries } = schema.end();
+    if (debugging) {
+      return { createTableQuery, queueQueries };
+    }
+    return this.createTableIfNotExists(createTableQuery, queueQueries);
+  }
+  createTableIfNotExists(createTableQuery, queueQueries) {
+    db.getConnection()
+      .then(conn => {
+        this.hasTable(conn)
+        .then(res => {
+          if (!res.length) {
+            console.log(createTableQuery, queueQueries);
+            return conn.query(createTableQuery)
+              .then(() => {
+                const dbQueries = [];
+                for (let i = 0; i < queueQueries.length; i++) {
+                  dbQueries.push(conn.query(queueQueries[i]));
+                }
+                // Makes sure all asynchronous promises have returned before moving on
+                return Promise.all(dbQueries).then(() => conn);
+              })
+              .catch(err => {
+                throw new Error(`\nSchema query error! \n Create table queries: ${createTableQuery} \n Foreign key queries: ${queueQueries} \n ${err}`);
+              });
+          }
+          return conn;
+        });
+      })
+      .then(conn => db.release(conn))
+      .catch(err => {
+        throw new Error(`\nSchema query error! \n Create table queries: ${createTableQuery} \n Foreign key queries: ${queueQueries} \n ${err}`);
+      });
+  }
+
+  hasTable(conn) {
+    return conn.query(`SHOW TABLES LIKE '${this.tableName}'`)
   }
 }
 
@@ -192,19 +219,19 @@ module.exports = Table;
 
 // ################################################# TESTS BELOW ##################################################
 
-const User = new Table('User', user => {
-  user.bigInt('facebookId', 64, 'UNSIGNED');
-  user.varChar('email', 255);
-  user.varChar('firstName', 255);
-  user.varChar('lastName', 255);
-  user.primaryKey('User_primaryKey', 'facebookId');
-  user.timestamp();
-});
+// const User = new Table('User', user => {
+//   user.bigInt('facebookId', 64, 'UNSIGNED');
+//   user.varChar('email', 255);
+//   user.varChar('firstName', 255);
+//   user.varChar('lastName', 255);
+//   user.primaryKey('User_primaryKey', 'facebookId');
+//   user.timestamp();
+// }, true);
 
-const Product = new Table('Product', product => {
-  product.bigInt('upc', 64, 'UNSIGNED');
-  product.bigInt('User_facebookId', 64, 'UNSIGNED');
-  product.foreignKey('fk_Product_User_facebookId', 'User_facebookId', 'User', 'facebookId');
-});
+// console.log(User);
 
-
+// const Product = new Table('Product', product => {
+//   product.bigInt('upc', 64, 'UNSIGNED');
+//   product.bigInt('User_facebookId', 64, 'UNSIGNED');
+//   product.foreignKey('fk_Product_User_facebookId', 'User_facebookId', 'User', 'facebookId');
+// });
