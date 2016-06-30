@@ -1,6 +1,7 @@
 const utility = require('./utility');
 const db = require('./db');
 process.env.DB_NAME = 'test';
+const Model = require('./model');
 
 class Schema {
   constructor(tableName) {
@@ -59,7 +60,8 @@ class Schema {
   }
 
   primaryKey(constraintName, ...columns) {
-    this.constraints[constraintName] = { name: constraintName, type: 'PRIMARY KEY', columns };
+    if (!columns.length) columns[0] = this.current.name;
+    this.constraints[constraintName] = { name: constraintName || `${this.tableName}_pk`, type: 'PRIMARY KEY', columns };
     for (let i = 0; i < columns.length; i++) {
       if (!this.columns.hasOwnProperty(columns[i])) throw new Error(`Can\'t add primary key to column ${columns[i]}, which does not exist`);
       this.columns[columns[i]].primaryKey = true;
@@ -143,22 +145,9 @@ class Schema {
     const createTableQuery = `CREATE TABLE IF NOT EXISTS ${this.tableName} (${this.queries.join(',')});`;
     const ALTER_TABLE = `ALTER TABLE ${this.tableName}`;
     const queueQueries = this.queue.map(query => `${ALTER_TABLE} ${query}`);
-    db.getConnection()
-      .then(conn => conn.query(`USE ${process.env.DB_NAME}`).then(() => conn))
-      .then(conn => conn.query(createTableQuery).then(() => conn))
-      .then(conn => {
-        const dbQueries = [];
-        for (let i = 0; i < queueQueries.length; i++) {
-          dbQueries.push(conn.query(queueQueries[i]));
-        }
-        // Makes sure all asynchronous promises have returned before moving on
-        return Promise.all(dbQueries).then(() => conn);
-      })
-      .then(conn => db.release(conn))
-      .catch((err, conn) => {
-        console.log(err, conn);
-        throw new Error('Schema creation query error');
-      });
+
+    return { createTableQuery, queueQueries };
+
     // return Model.bind(null, this.tableName, this.schema);
   }
 }
@@ -179,32 +168,99 @@ class Schema {
   }
 }());
 
+const asyncManager = (function() {
+  let foreignKeyQueries = [];
+  let createTablePromises = [];
+  return {
+    add(promise, query) {
+      Array.prototype.push.apply(foreignKeyQueries, query);
+      createTablePromises.push(promise);
+      if (createTablePromises.length === 1) {
+        Promise.all(createTablePromises)
+        .then(() =>
+          db
+            .getConnection()
+            .then(conn => {
+              const promises = [];
+              for (let i = 0; i < foreignKeyQueries.length; i++) {
+                promises.push(conn.query(foreignKeyQueries[i]));
+              }
+              return Promise.all(promises).then(() => db.release(conn));
+            })
+        )
+        .then(() => {
+          foreignKeyQueries = [];
+          createTablePromises = [];
+        });
+      }
+    },
+  };
+}());
 
 class Table {
-  constructor(tableName, callback) {
+
+  constructor(tableName, callback, debugging) {
+    this.tableName = tableName;
     const schema = new Schema(tableName);
     callback(schema);
-    return schema.end();
+    const { createTableQuery, queueQueries } = schema.end();
+    if (debugging) {
+      return { createTableQuery, queueQueries };
+    }
+    this.createTableIfNotExists(createTableQuery, queueQueries);
+    return new Model(tableName, schema);
   }
+
+  createTableIfNotExists(createTableQuery, queueQueries) {
+    db.getConnection()
+      .then(conn =>
+        this.hasTable(conn)
+        .then(exists => {
+          if (!exists) {
+            asyncManager.add(conn.query(createTableQuery), queueQueries);
+          }
+        })
+        .then(() => conn)
+      )
+      .then(conn => db.release(conn))
+      .catch(err => {
+        const error = `\nSchema query error! \n Create table queries: ${createTableQuery} \n Foreign key queries: ${queueQueries} \n ${err}`;
+        console.log(error);
+      });
+  }
+
+  hasTable(conn) {
+    return conn.query(`SHOW TABLES LIKE '${this.tableName}'`).then(res => res.length > 0);
+  }
+
+  // DEPRECATED BUT KEEP THIS HERE FOR NOW JUST IN CASE
+  // queryArray(array) {
+  //   const promises = [];
+  //   for (let i = 0; i < array.length; i++) {
+  //     const promise = db.getConnection().then(conn => conn.query(array[i]));
+  //     promises.push(promise);
+  //   }
+  //   return Promise.all(promises);
+  // }
 }
 
 module.exports = Table;
 
 // ################################################# TESTS BELOW ##################################################
 
-const User = new Table('User', user => {
-  user.bigInt('facebookId', 64, 'UNSIGNED');
-  user.varChar('email', 255);
-  user.varChar('firstName', 255);
-  user.varChar('lastName', 255);
-  user.primaryKey('User_primaryKey', 'facebookId');
-  user.timestamp();
-});
+// const User = new Table('User', user => {
+//   user.bigInt('facebookId', 64, 'UNSIGNED');
+//   user.varChar('email', 255);
+//   user.varChar('firstName', 255);
+//   user.varChar('lastName', 255);
+//   user.primaryKey('User_primaryKey', 'facebookId');
+//   user.timestamp();
+// }, true);
 
-const Product = new Table('Product', product => {
-  product.bigInt('upc', 64, 'UNSIGNED');
-  product.bigInt('User_facebookId', 64, 'UNSIGNED');
-  product.foreignKey('fk_Product_User_facebookId', 'User_facebookId', 'User', 'facebookId');
-});
+// console.log(User);
 
-
+// const Product = new Table('Product', product => {
+//   product.bigInt('upc', 64, 'UNSIGNED');
+//   product.bigInt('User_facebookId', 64, 'UNSIGNED');
+//   product.foreignKey('fk_Product_User_facebookId', 'User_facebookId', 'User', 'facebookId');
+// });
