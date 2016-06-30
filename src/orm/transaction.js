@@ -28,26 +28,26 @@ class Transaction {
         });
     });
   }
-
 }
 
-const test = new Transaction();
-test.next(qb =>
-  qb
-  .raw('DELETE FROM User WHERE facebookId = 55555')
-).next(qb =>
-  qb.select({ what: 'facebookId', from: 'User' }).where({ email: 'will@gmail.com' })
-).next((qb, res) =>
-  qb
-  .insertOrUpdate({
-    table: 'User',
-    columns: {
-      facebookId: res[0].facebookId,
-      firstName: 'Will',
-      lastName: 'Tang',
-      email: 'xxxxxxxxxxx',
-    },
-  })
-).start();
-
 module.exports = Transaction;
+
+// const test = new Transaction();
+// test.next(qb =>
+//   qb
+//   .raw('DELETE FROM User WHERE facebookId = 55555')
+// ).next(qb =>
+//   qb.select({ what: 'facebookId', from: 'User' }).where({ email: 'will@gmail.com' })
+// ).next((qb, res) =>
+//   qb
+//   .insertOrUpdate({
+//     table: 'User',
+//     columns: {
+//       facebookId: res[0].facebookId,
+//       firstName: 'Will',
+//       lastName: 'Tang',
+//       email: 'xxxxxxxxxxx',
+//     },
+//   })
+// ).start();
+

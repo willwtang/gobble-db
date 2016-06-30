@@ -1,7 +1,7 @@
 const utility = require('./utility');
 const db = require('./db');
 process.env.DB_NAME = 'test';
-console.log(db.database);
+const Model = require('./model');
 
 class Schema {
   constructor(tableName) {
@@ -168,9 +168,37 @@ class Schema {
   }
 }());
 
-const tableCreations = [];
+const asyncManager = (function() {
+  let foreignKeyQueries = [];
+  let createTablePromises = [];
+  return {
+    add(promise, query) {
+      Array.prototype.push.apply(foreignKeyQueries, query);
+      createTablePromises.push(promise);
+      if (createTablePromises.length === 1) {
+        Promise.all(createTablePromises)
+        .then(() =>
+          db
+            .getConnection()
+            .then(conn => {
+              const promises = [];
+              for (let i = 0; i < foreignKeyQueries.length; i++) {
+                promises.push(conn.query(foreignKeyQueries[i]));
+              }
+              return Promise.all(promises).then(() => db.release(conn));
+            })
+        )
+        .then(() => {
+          foreignKeyQueries = [];
+          createTablePromises = [];
+        });
+      }
+    },
+  };
+}());
 
 class Table {
+
   constructor(tableName, callback, debugging) {
     this.tableName = tableName;
     const schema = new Schema(tableName);
@@ -179,40 +207,41 @@ class Table {
     if (debugging) {
       return { createTableQuery, queueQueries };
     }
-    return this.createTableIfNotExists(createTableQuery, queueQueries);
+    this.createTableIfNotExists(createTableQuery, queueQueries);
+    return new Model(tableName, schema);
   }
+
   createTableIfNotExists(createTableQuery, queueQueries) {
     db.getConnection()
-      .then(conn => {
+      .then(conn =>
         this.hasTable(conn)
-        .then(res => {
-          if (!res.length) {
-            console.log(createTableQuery, queueQueries);
-            return conn.query(createTableQuery)
-              .then(() => {
-                const dbQueries = [];
-                for (let i = 0; i < queueQueries.length; i++) {
-                  dbQueries.push(conn.query(queueQueries[i]));
-                }
-                // Makes sure all asynchronous promises have returned before moving on
-                return Promise.all(dbQueries).then(() => conn);
-              })
-              .catch(err => {
-                throw new Error(`\nSchema query error! \n Create table queries: ${createTableQuery} \n Foreign key queries: ${queueQueries} \n ${err}`);
-              });
+        .then(exists => {
+          if (!exists) {
+            asyncManager.add(conn.query(createTableQuery), queueQueries);
           }
-          return conn;
-        });
-      })
+        })
+        .then(() => conn)
+      )
       .then(conn => db.release(conn))
       .catch(err => {
-        throw new Error(`\nSchema query error! \n Create table queries: ${createTableQuery} \n Foreign key queries: ${queueQueries} \n ${err}`);
+        const error = `\nSchema query error! \n Create table queries: ${createTableQuery} \n Foreign key queries: ${queueQueries} \n ${err}`;
+        console.log(error);
       });
   }
 
   hasTable(conn) {
-    return conn.query(`SHOW TABLES LIKE '${this.tableName}'`)
+    return conn.query(`SHOW TABLES LIKE '${this.tableName}'`).then(res => res.length > 0);
   }
+
+  // DEPRECATED BUT KEEP THIS HERE FOR NOW JUST IN CASE
+  // queryArray(array) {
+  //   const promises = [];
+  //   for (let i = 0; i < array.length; i++) {
+  //     const promise = db.getConnection().then(conn => conn.query(array[i]));
+  //     promises.push(promise);
+  //   }
+  //   return Promise.all(promises);
+  // }
 }
 
 module.exports = Table;

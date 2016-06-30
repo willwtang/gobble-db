@@ -1,18 +1,5 @@
 // DEPRECATED FILE - HERE FOR REFERENCE ONLY - WILL
 
-// var Promise = require('bluebird');
-// var db = require('./db.js');
-// db.query = Promise.promisify(db.query);
-
-class Model {
-  constructor(tableName, schema) {
-    this.tableName = tableName;
-    this.schema = schema;
-    this.sequence = [];
-  }
-
-}
-
 
 class QueryBuilder {
   constructor() {
@@ -29,6 +16,8 @@ class QueryBuilder {
     this.sequence.push(`SELECT ${this._parseInput(obj.what, this._parseColumns)} FROM ${this._parseInput(obj.from, this._parseTables)}`);
     return this;
   }
+
+  ######
   _parseInput(obj, stringFunc) {
     let columns;
     const type = utility.type(obj);
@@ -69,7 +58,8 @@ class QueryBuilder {
     }
     return results.join(' AND ');
   }
-  where(...args) {
+
+  _where(conjunction, ...args) {
     let target;
     const first = args[0];
     if (typeof first === 'string') {
@@ -77,11 +67,19 @@ class QueryBuilder {
     } else if (typeof first === 'object') {
       target = this._parseEquailty(first);
     }
-    this.sequence.push(`WHERE ${target}`);
+    this.sequence.push(`${conjunction} ${target}`);
   }
 
-  andWhere() {
+  where(...args) {
+    this._where('WHERE', ...args);
+  }
 
+  andWhere(...args) {
+    this._where('AND', ...args);
+  }
+
+  orWhere(...args) {
+    this._where('OR', ...args);
   }
 
   innerJoin(obj) {
