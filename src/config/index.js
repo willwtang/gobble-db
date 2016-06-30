@@ -7,4 +7,4 @@ const config = (app) => {
   app.use(bodyParser.urlencoded({ extended: true }));
 };
 
-export default config;
+module.exports = config;
