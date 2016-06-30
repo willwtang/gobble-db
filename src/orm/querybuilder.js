@@ -1,10 +1,11 @@
 // Dependencies
 const utility = require('./utility');
-
+const db = require('./db');
 
 class QueryBuilder {
   constructor() {
     this.sequence = [];
+    this.currentSelected = null;
   }
   raw(...args) {
     this.sequence.push(args.join(' '));
@@ -15,6 +16,7 @@ class QueryBuilder {
     //   from: { table: ${ALIAS} } or [] OR string
     // }
     this.sequence.push(`SELECT ${this._parseInput(obj.what, this._parseColumns)} FROM ${this._parseInput(obj.from, this._parseTables)}`);
+    this.currentSelected = obj;
     return this;
   }
 
@@ -30,51 +32,64 @@ class QueryBuilder {
       }
       return obj.columns[key];
     });
-    const query = `INSERT INTO ${obj.table} (${columns.join(',')}) VALUES (${values.join(',')}) ON DUPLICATE KEY UPDATE ${columns.map(column => `${column} = VALUES(${column})`).join(',')};`;
+    const query = `INSERT INTO ${obj.table} (${columns.join(',')}) VALUES (${values.join(',')}) ON DUPLICATE KEY UPDATE ${columns.map(column => `${column} = VALUES(${column})`).join(',')}`;
     this.sequence.push(query);
+    return this;
+  }
+
+  _where(conjunction, ...args) {
+    let target;
+    const first = args[0];
+    if (typeof first === 'string') {
+      target = args.join(' ');
+    } else if (typeof first === 'object') {
+      target = this._parseEquailty(first);
+    }
+    this.sequence.push(`${conjunction} ${target}`);
+    return this;
   }
 
   where(...args) {
-    let target;
-    const first = args[0];
-    if (typeof first === 'string') {
-      target = args.join(' ');
-    } else if (typeof first === 'object') {
-      target = this._parseEquailty(first);
-    }
-    this.sequence.push(`WHERE ${target}`);
-    return this;
+    return this._where('WHERE', ...args);
   }
 
   andWhere(...args) {
-    let target;
-    const first = args[0];
-    if (typeof first === 'string') {
-      target = args.join(' ');
-    } else if (typeof first === 'object') {
-      target = this._parseEquailty(first);
-    }
-    this.sequence.push(`AND ${target}`);
-    return this;
+    return this._where('AND', ...args);
   }
+
+  orWhere(...args) {
+    return this._where('OR', ...args);
+  }
+
 
   innerJoin(obj) {
     // obj = {
-    //   table: {
-    //     tableName: ${ALIAS}
-    //   }
+    //   target:
+    //   table:
     //   on: {
     //     column: column
     //   }
     // }
-    const query = `INNER JOIN ${this.parseInput(obj.table)} ON ${this._parseEquailty(obj.on)}`;
+    const query = `INNER JOIN ${obj.target} ON ${this._parseEquailty(obj.on, obj.table, obj.target)}`;
     this.sequence.push(query);
     return this;
   }
 
-  leftJoin(obj) {
-    const query = `LEFT JOIN ${this.parseInput(obj.table)} ON ${this._parseEquailty(obj.on)}`;
-    this.sequence.push(query);
+  // leftJoin(obj) {
+  //   const query = `LEFT JOIN ${this._parseInput(obj.table)} ON ${this._parseEquailty(obj.on)}`;
+  //   this.sequence.push(query);
+  //   return this;
+  // }
+
+  destroy(obj) {
+    if (utility.type(obj) !== 'object') {
+      throw new Error('Wrong type of input in destroy function');
+    }
+
+    this.sequence.push(`DELETE FROM ${obj.table}`);
+    if (obj.hasOwnProperty('where')) {
+      this.where(obj.where);
+    }
     return this;
   }
 
@@ -95,11 +110,22 @@ class QueryBuilder {
     }
     const query = `ALTER TABLE ${obj.table} ${target}`;
     this.sequence.push(query);
+    return this;
   }
 // ################################################ EXECUTE QUERIES ###############################################
 
   fire() {
-    return this.db.query(this.sequence.join(' '));
+    const query = this.sequence.join(' ');
+    console.log(query);
+    return db.getConnection()
+      .then(conn => conn.query(query).then(res => {
+        db.release(conn);
+        return res;
+      }))
+      .catch(err => {
+        const error = `You have a database query error: \n The query was: ${query} \n The error was: ${err}`;
+        console.log(error);
+      });
   }
 
   materialize() {
@@ -128,27 +154,43 @@ class QueryBuilder {
   }
 
   _parseTables(alias, tableName) {
-    return `${tableName}${alias ? `AS ${alias}` : ''}`;
+    return `${tableName}${alias ? ` AS ${alias}` : ''}`;
   }
 
   _parseColumns(alias, columnName) {
     return `${alias ? `${alias}.` : ''}${columnName}`;
   }
 
-  _parseEquailty(obj) {
+  _parseEquailty(obj, table1, table2) {
     const type = utility.type(obj);
     const results = [];
+    table1 = table1 ? `${table1}.` : '';
+    table2 = table2 ? `${table2}.` : '';
     if (type === 'string') {
       results.push(obj);
     } else if (type === 'object') {
       const entries = Object.keys(obj);
       for (let i = 0; i < entries.length; i++) {
-        results.push(`${entries[i]} = '${obj[entries[i]]}'`);
+        results.push(`${table1}${entries[i]} = ${table2}${(table1 || table2 || utility.type(obj[entries[i]]) === 'number') ? obj[entries[i]] : `'${obj[entries[i]]}'`}`);
       }
     }
     return results.join(' AND ');
   }
+
+  // _columnEquality(obj, table1, table2) {
+  //   const type = utility.type(obj);
+  //   const results = [];
+
+  //   if (type === 'string') {
+  //     results.push(obj);
+  //   } else if (type === 'object') {
+  //     const entries = Object.keys(obj);
+  //     for (let i = 0; i < entries.length; i++) {
+  //       results.push(`${table1}${entries[i]} = ${table2}${utility.type(obj[entries[i]]) === 'number' ? obj[entries[i]] : `'${obj[entries[i]]}'`}`);
+  //     }
+  //   }
+  // }
 }
 
-
+a = new QueryBuilder();
 module.exports = QueryBuilder;

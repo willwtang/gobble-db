@@ -2,6 +2,10 @@ const mysql = require('promise-mysql');
 
 class Pool {
   constructor(details) {
+    const detail = Object.keys(details);
+    for (let i = 0; i < detail.length; i++) {
+      this[detail[i]] = details[detail[i]];
+    }
     const connection = mysql.createPool(details);
     this.getConnection = () => connection.getConnection();
     this.release = conn => connection.releaseConnection(conn);
@@ -15,5 +19,4 @@ const database = 'test';
 
 const pool = new Pool({ host, user, password, database });
 
-pool.getConnection().then(conn => conn.query('START TRANSACTION;')).then(res => console.log(res));
 module.exports = pool;
