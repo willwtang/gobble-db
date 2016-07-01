@@ -9,6 +9,15 @@ const User = new Table('User', user => {
   user.timestamp();
 });
 
+const Follow = new Table('Follow', follow => {
+  follow.bigInt('follower', 64, 'UNSIGNED');
+  follow.bigInt('followed', 64, 'UNSIGNED');
+
+  follow.primaryKey(null, 'follower', 'followed');
+  follow.foreignKey('Follow_fk_follower', 'follower', 'User', 'facebookId');
+  follow.foreignKey('Follow_fk_followed', 'followed', 'User', 'facebookId');
+});
+
 const Product = new Table('Product', product => {
   product.bigInt('upc', 64, 'UNSIGNED').primaryKey();
   product.varChar('name', 255);
@@ -162,4 +171,4 @@ Post.join({ table: Review, on: { 'Post.id': 'Review.Post_id' } }, { table: Produ
 // Product.join({ table: Brand, on: { 'Product.Brand_id': 'Brand.id' } }).then(res => console.log(res));
 // Product.match({ upc: [20394892038402934, 23894238974] }).then(res => console.log(res));
 
-module.exports = { User, Product, Brand, Category, ProductCategory, Ingredient, Tag, ProductTag, Image, Post, Review, Wish, ProductIngredient };
+module.exports = { User, Product, Brand, Category, ProductCategory, Ingredient, Tag, ProductTag, Image, Post, Review, Wish, ProductIngredient, Follow };

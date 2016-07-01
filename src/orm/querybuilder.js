@@ -22,6 +22,7 @@ class QueryBuilder {
     const fromStr = this._parseInput(obj.from, this._parseTables);
     const orderBy = obj.orderBy || '';
     const asObj = obj.as || '';
+    const where = obj.where || '';
 
     let limit = '';
     if (obj.hasOwnProperty('limit')) limit = (utility.type(obj.limit) === 'array' ? obj.limit.join(',') : obj.limit);
@@ -29,6 +30,10 @@ class QueryBuilder {
     sequence.push(`SELECT ${what} FROM ${fromStr}`);
     if (orderBy) sequence.push(`ORDER BY ${orderBy}`);
     if (limit) sequence.push(`LIMIT ${limit}`);
+    if (where) {
+      this.where(where);
+      sequence.push(this.sequence.pop());
+    }
 
     if (asObj) {
       this.sequence.push(`((${sequence.join(' ')}) AS ${asObj})`);
@@ -160,10 +165,21 @@ class QueryBuilder {
     this.sequence.push(query);
     return this;
   }
+
+  groupBy(obj) {
+    this.sequence.push(`GROUP BY ${obj}`);
+    return this;
+  }
+
+  orderBy(obj) {
+    this.sequence.push(`ORDER BY ${obj}`);
+    return this;
+  }
 // ################################################ EXECUTE QUERIES ###############################################
 
   fire() {
     const query = this.sequence.join(' ');
+    console.log(query);
     return db.getConnection()
       .then(conn => conn.query(query).then(res => {
         db.release(conn);

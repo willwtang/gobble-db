@@ -61,15 +61,14 @@ class Model {
     return qb.fire();
   }
 
-  selectJoin(what, where, orderBy, limit, ...objs) {
+  selectJoinChain(what, where, orderBy, limit, ...objs) {
     const qb = new QueryBuilder();
     const qb2 = new QueryBuilder();
     qb2.select({ what: '*', from: this.tableName, orderBy, limit, as: 'T1' });
     qb.select({ what, from: qb2.materialize() });
     this._join(qb, objs);
-    return (qb
-      .where(where)
-      .fire());
+    if (where) qb.where(where);
+    return qb.fire();
   }
 
   leftJoin(obj) {
