@@ -9,8 +9,8 @@ if (process.env.NODE_ENV === 'development') {
 const express = require('express');
 const app = express();
 
-const morgan = require('morgan');
-app.use(morgan('dev'));
+require('./config')(app);
+require('./routes')(app);
 
 app.listen(process.env.PORT, () => {
   console.log(`${process.env.APP_NAME} is listening on port ${process.env.PORT}.`);

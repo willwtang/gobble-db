@@ -7,7 +7,6 @@ const User = new Table('User', user => {
   user.varChar('display_name', 255);
   user.varChar('gender', 255);
   user.varChar('photo_url', 255);
-
   user.timestamp();
 });
 
