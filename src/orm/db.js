@@ -15,7 +15,7 @@ class Pool {
 const host = process.env.HOST || '127.0.0.1';
 const user = process.env.DB_USER || 'root';
 const password = process.env.DB_PASSWORD || 'abc';
-const database = 'test';
+const database = process.env.APP_NAME || 'test';
 
 const pool = new Pool({ host, user, password, database });
 

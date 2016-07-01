@@ -15,6 +15,17 @@ class Model {
       .fire();
   }
 
+  match(where) {
+    // where: {
+    // columnName: []
+    // }
+    const qb = new QueryBuilder();
+    return qb
+      .select({ what: '*', from: this.tableName })
+      .whereIn(where)
+      .fire();
+  }
+
   save(obj) {
     const qb = new QueryBuilder();
     const wrap = {
@@ -32,7 +43,36 @@ class Model {
       .fire();
   }
 
-  join(obj) {
+  _join(qb, objs) {
+    for (let i = 0; i < objs.length; i++) {
+      const obj = objs[i];
+      const table = obj.table.tableName;
+      const on = obj.on;
+      qb.innerJoin({ table: this.tableName, target: table, on });
+    }
+  }
+
+  join(...objs) {
+    const qb = new QueryBuilder();
+    const what = '*';
+    qb.select({ what, from: this.tableName });
+
+    this._join(qb, objs);
+    return qb.fire();
+  }
+
+  selectJoin(what, where, orderBy, limit, ...objs) {
+    const qb = new QueryBuilder();
+    const qb2 = new QueryBuilder();
+    qb2.select({ what: '*', from: this.tableName, orderBy, limit, as: 'T1' });
+    qb.select({ what, from: qb2.materialize() });
+    this._join(qb, objs);
+    return (qb
+      .where(where)
+      .fire());
+  }
+
+  leftJoin(obj) {
     const qb = new QueryBuilder();
     const what = obj.what || '*';
     const table = obj.table.tableName;
@@ -40,7 +80,7 @@ class Model {
 
     return (qb
       .select({ what, from: this.tableName })
-      .innerJoin({ table: this.tableName, target: table, on })
+      .leftJoin({ table: this.tableName, target: table, on })
       .fire());
   }
 }

@@ -171,29 +171,27 @@ class Schema {
 const asyncManager = (function() {
   let foreignKeyQueries = [];
   let createTablePromises = [];
-  return {
-    add(promise, query) {
-      Array.prototype.push.apply(foreignKeyQueries, query);
-      createTablePromises.push(promise);
-      if (createTablePromises.length === 1) {
-        Promise.all(createTablePromises)
-        .then(() =>
-          db
-            .getConnection()
-            .then(conn => {
-              const promises = [];
-              for (let i = 0; i < foreignKeyQueries.length; i++) {
-                promises.push(conn.query(foreignKeyQueries[i]));
-              }
-              return Promise.all(promises).then(() => db.release(conn));
-            })
-        )
-        .then(() => {
-          foreignKeyQueries = [];
-          createTablePromises = [];
-        });
-      }
-    },
+  return function(promise, query) {
+    Array.prototype.push.apply(foreignKeyQueries, query);
+    createTablePromises.push(promise);
+    if (createTablePromises.length === 1) {
+      Promise.all(createTablePromises)
+      .then(() =>
+        db
+          .getConnection()
+          .then(conn => {
+            const promises = [];
+            for (let i = 0; i < foreignKeyQueries.length; i++) {
+              promises.push(conn.query(foreignKeyQueries[i]));
+            }
+            return Promise.all(promises).then(() => db.release(conn));
+          })
+      )
+      .then(() => {
+        foreignKeyQueries = [];
+        createTablePromises = [];
+      });
+    }
   };
 }());
 
@@ -217,7 +215,7 @@ class Table {
         this.hasTable(conn)
         .then(exists => {
           if (!exists) {
-            asyncManager.add(conn.query(createTableQuery), queueQueries);
+            asyncManager(conn.query(createTableQuery), queueQueries);
           }
         })
         .then(() => conn)
