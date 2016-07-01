@@ -14,8 +14,32 @@ class QueryBuilder {
     // obj = {
     //   what: { column: ${ALIAS} } OR [] OR string
     //   from: { table: ${ALIAS} } or [] OR string
+    //   orderBy: column
+    //   limit:
     // }
-    this.sequence.push(`SELECT ${this._parseInput(obj.what, this._parseColumns)} FROM ${this._parseInput(obj.from, this._parseTables)}`);
+    const sequence = [];
+    const what = this._parseInput(obj.what, this._parseColumns);
+    const fromStr = this._parseInput(obj.from, this._parseTables);
+    const orderBy = obj.orderBy || '';
+    const asObj = obj.as || '';
+    const where = obj.where || '';
+
+    let limit = '';
+    if (obj.hasOwnProperty('limit')) limit = (utility.type(obj.limit) === 'array' ? obj.limit.join(',') : obj.limit);
+
+    sequence.push(`SELECT ${what} FROM ${fromStr}`);
+    if (orderBy) sequence.push(`ORDER BY ${orderBy}`);
+    if (limit) sequence.push(`LIMIT ${limit}`);
+    if (where) {
+      this.where(where);
+      sequence.push(this.sequence.pop());
+    }
+
+    if (asObj) {
+      this.sequence.push(`((${sequence.join(' ')}) AS ${asObj})`);
+      return this;
+    }
+    this.sequence.push(sequence.join(' '));
     this.currentSelected = obj;
     return this;
   }
@@ -61,6 +85,35 @@ class QueryBuilder {
     return this._where('OR', ...args);
   }
 
+  _whereIn(conjunction, obj) {
+    // {
+    //   columnName: in???
+    // }
+    const columns = Object.keys(obj);
+    const results = [];
+    for (let i = 0; i < columns.length; i++) {
+      const column = columns[i];
+      const values = obj[column].map(value => {
+        if (utility.type(value) === 'string') {
+          return `'${value}'`;
+        }
+        return value;
+      });
+      const query = `${column} IN (${values})`;
+      results.push(query);
+    }
+    this.sequence.push(`${conjunction} ${results.join(' AND ')}`);
+    return this;
+  }
+
+  whereIn(obj) {
+    return this._whereIn('WHERE', obj);
+  }
+
+  orWhereIn(obj) {
+    return this._whereIn('OR', obj);
+  }
+
 
   innerJoin(obj) {
     // obj = {
@@ -70,16 +123,16 @@ class QueryBuilder {
     //     column: column
     //   }
     // }
-    const query = `INNER JOIN ${obj.target} ON ${this._parseEquailty(obj.on, obj.table, obj.target)}`;
+    const query = `INNER JOIN ${obj.target} ON ${this._parseColumnEquality(obj.on)}`;
     this.sequence.push(query);
     return this;
   }
 
-  // leftJoin(obj) {
-  //   const query = `LEFT JOIN ${this._parseInput(obj.table)} ON ${this._parseEquailty(obj.on)}`;
-  //   this.sequence.push(query);
-  //   return this;
-  // }
+  leftJoin(obj) {
+    const query = `LEFT JOIN ${obj.target} ON ${this._parseColumnEquality(obj.on)}`;
+    this.sequence.push(query);
+    return this;
+  }
 
   destroy(obj) {
     if (utility.type(obj) !== 'object') {
@@ -112,6 +165,16 @@ class QueryBuilder {
     this.sequence.push(query);
     return this;
   }
+
+  groupBy(obj) {
+    this.sequence.push(`GROUP BY ${obj}`);
+    return this;
+  }
+
+  orderBy(obj) {
+    this.sequence.push(`ORDER BY ${obj}`);
+    return this;
+  }
 // ################################################ EXECUTE QUERIES ###############################################
 
   fire() {
@@ -129,7 +192,7 @@ class QueryBuilder {
   }
 
   materialize() {
-    return `${this.sequence.join(' ')};`;
+    return this.sequence.join(' ');
   }
 
 
@@ -161,17 +224,34 @@ class QueryBuilder {
     return `${alias ? `${alias}.` : ''}${columnName}`;
   }
 
-  _parseEquailty(obj, table1, table2) {
+  _parseEquailty(obj) {
     const type = utility.type(obj);
     const results = [];
-    table1 = table1 ? `${table1}.` : '';
-    table2 = table2 ? `${table2}.` : '';
+
     if (type === 'string') {
       results.push(obj);
     } else if (type === 'object') {
       const entries = Object.keys(obj);
       for (let i = 0; i < entries.length; i++) {
-        results.push(`${table1}${entries[i]} = ${table2}${(table1 || table2 || utility.type(obj[entries[i]]) === 'number') ? obj[entries[i]] : `'${obj[entries[i]]}'`}`);
+        results.push(`${entries[i]} = ${utility.type(obj[entries[i]]) === 'number' ? obj[entries[i]] : `'${obj[entries[i]]}'`}`);
+      }
+    }
+    return results.join(' AND ');
+  }
+
+  _parseColumnEquality(obj, table1, table2) {
+    table1 = table1 ? `${table1}.` : '';
+    table2 = table2 ? `${table2}.` : '';
+
+    const type = utility.type(obj);
+    const results = [];
+
+    if (type === 'string') {
+      results.push(obj);
+    } else if (type === 'object') {
+      const entries = Object.keys(obj);
+      for (let i = 0; i < entries.length; i++) {
+        results.push(`${table1}${entries[i]} = ${table2}${obj[entries[i]]}`);
       }
     }
     return results.join(' AND ');
@@ -192,5 +272,6 @@ class QueryBuilder {
   // }
 }
 
-a = new QueryBuilder();
+
+// a = new QueryBuilder();
 module.exports = QueryBuilder;
