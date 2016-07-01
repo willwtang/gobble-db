@@ -32,7 +32,10 @@ class Model {
       table: this.tableName,
       columns: obj,
     };
-    return qb.insertOrUpdate(wrap).fire();
+    return qb
+      .insertOrUpdate(wrap)
+      .fire()
+      .then(res => res);
   }
 
   destroy(obj) {

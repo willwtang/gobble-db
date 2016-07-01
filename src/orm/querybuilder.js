@@ -23,6 +23,7 @@ class QueryBuilder {
     const orderBy = obj.orderBy || '';
     const asObj = obj.as || '';
     const where = obj.where || '';
+    const whereIn = obj.whereIn || '';
 
     let limit = '';
     if (obj.hasOwnProperty('limit')) limit = (utility.type(obj.limit) === 'array' ? obj.limit.join(',') : obj.limit);
@@ -32,6 +33,10 @@ class QueryBuilder {
     if (limit) sequence.push(`LIMIT ${limit}`);
     if (where) {
       this.where(where);
+      sequence.push(this.sequence.pop());
+    }
+    if (whereIn) {
+      this.whereIn(whereIn);
       sequence.push(this.sequence.pop());
     }
 

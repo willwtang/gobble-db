@@ -51,10 +51,20 @@ const getPostsByFriends = function(date, limit, user) {
 };
 
 const getPostsById = function(arrayOfPostIds) {
-  return Post.match({ id: arrayOfPostIds });
+  const qb = new QueryBuilder();
+  const nested = new QueryBuilder();
+
+  nested.select({ what: '*', from: 'Post', whereIn: { 'Post.id': arrayOfPostIds }, as: 'T1' });
+
+  return (qb
+    .select({ what: '*', from: nested })
+    .innerJoin({ target: 'Review', on: 'Review.Post_id = T1.id' })
+    .innerJoin({ target: 'User', on: 'Review.User_facebookId = User.facebookId' })
+    .innerJoin({ target: 'Product', on: 'Review.Product_upc = Product.upc' })
+    .fire());
 };
 // getAllPostsByDate('2016-07-30 00:00:00', 20);
-// User.save({ facebookId: 1, firstName: 'Charles', lastName: 'Zhang', email: '2@2' });
+User.save({ facebookId: 1, firstName: 'Charles', lastName: 'Zhang', email: '2@2' }).then(res => console.log(res));
 // User.save({ facebookId: 2, firstName: 'Will', lastName: 'Tang', email: '2@2' });
 // Review.save({ id: 1, User_facebookId: 2 });
 // Follow.save({ follower: 1, followed: 2 });

@@ -1,10 +1,12 @@
 const Table = require('../orm/schema');
 
 const User = new Table('User', user => {
-  user.bigInt('facebookId', 64, 'UNSIGNED').primaryKey();
-  user.varChar('firstName', 255);
-  user.varChar('lastName', 255);
-  user.varChar('email', 255);
+  user.bigInt('facebook_id', 64, 'UNSIGNED').primaryKey();
+  user.varChar('first_name', 255);
+  user.varChar('last_name', 255);
+  user.varChar('display_name', 255);
+  user.varChar('gender', 255);
+  user.varChar('photo_url', 255);
 
   user.timestamp();
 });
@@ -106,40 +108,39 @@ const Post = new Table('Post', post => {
   post.timestamp();
 });
 
-const Image = new Table('Image', image => {
-  image.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
-  image.int('Post_id', 64, 'UNSIGNED');
-  image.varChar('url', 255);
-  image.varChar('urlCompressed', 255);
-  image.varChar('urlCompressedS3', 255);
-  image.bigInt('Product_upc', 64, 'UNSIGNED');
-  image.bigInt('User_facebookId', 64, 'UNSIGNED');
+const Media = new Table('Image', media => {
+  media.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
+  media.int('Post_id', 64, 'UNSIGNED');
+  media.varChar('url', 255);
+  media.varChar('urlCompressed', 255);
+  media.varChar('urlCompressedS3', 255);
+  media.bigInt('Product_upc', 64, 'UNSIGNED');
+  media.bigInt('User_facebookId', 64, 'UNSIGNED');
 
-  image.foreignKey('Image_fk_Product_upc', 'Product_upc', 'Product', 'upc');
-  image.foreignKey('Image_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
-  image.foreignKey('Image_fk_Post_id', 'Post_id', 'Post', 'id');
+  media.foreignKey('Image_fk_Product_upc', 'Product_upc', 'Product', 'upc');
+  media.foreignKey('Image_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
+  media.foreignKey('Image_fk_Post_id', 'Post_id', 'Post', 'id');
 
-  image.timestamp();
+  media.timestamp();
 });
 
 const Review = new Table('Review', review => {
-  review.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
+  review.int('reviewId', 64, 'UNSIGNED').autoIncrement().primaryKey();
   review.int('Post_id', 64, 'UNSIGNED');
   review.bigInt('Product_upc', 64, 'UNSIGNED');
   review.int('rating');
   review.bigInt('User_facebookId', 64, 'UNSIGNED');
+  review.timestamp();
+
   review.foreignKey('Review_fk_Product_upc', 'Product_upc', 'Product', 'upc');
   review.foreignKey('Review_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
   review.foreignKey('Review_fk_Post_id', 'Post_id', 'Post', 'id');
-
-  review.timestamp();
 });
 
 const Wish = new Table('Wish', wish => {
-  wish.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
+  wish.int('wishId', 64, 'UNSIGNED').autoIncrement().primaryKey();
   wish.int('Post_id', 64, 'UNSIGNED');
   wish.bigInt('Product_upc', 64, 'UNSIGNED');
-  wish.varChar('amazonUrl', 255);
   wish.bigInt('User_facebookId', 64, 'UNSIGNED');
   wish.foreignKey('Wish_fk_Product_upc', 'Product_upc', 'Product', 'upc');
   wish.foreignKey('Wish_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
@@ -148,27 +149,16 @@ const Wish = new Table('Wish', wish => {
   wish.timestamp();
 });
 
-// const Livestream = new Table('Livestream', livestream => {
-//   livestream.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
-//   livestream.int('Post_id', 64, 'UNSIGNED');
-//   livestream.bigInt('Product_upc', 64, 'UNSIGNED');
-//   livestream.varChar('url', 255);
-//   livestream.bigInt('User_facebookId', 64, 'UNSIGNED');
-//   livestream.foreignKey('Livestream_fk_Product_upc', 'Product_upc', 'Product', 'upc');
-//   livestream.foreignKey('Livestream_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
-//   livestream.foreignKey('Livestream_fk_Post_id', 'Post_id', 'Post', 'id');
-// });
-
 // Product.save({ upc: 20394892038402934, name: 'cereal', Brand_id: 1 });
 // Product.save({ upc: 23894238974, name: 'cereal', Brand_id: 1 });
 // Brand.save({ name: 'Kellog' });
 
-Review.save({ Post_id: 1, Product_upc: 20394892038402934, rating: 5 });
-Post.save({ id: 1, User_facebookId: 1, likesCache: 10, comment: 'test' });
+// Review.save({ Post_id: 1, Product_upc: 20394892038402934, rating: 5 });
+// Post.save({ id: 1, User_facebookId: 1, likesCache: 10, comment: 'test' });
 
-Post.join({ table: Review, on: { 'Post.id': 'Review.Post_id' } }, { table: Product, on: { 'Review.Product_upc': 'Product.upc' } }, { table: User, on: { 'Post.User_facebookId': 'User.facebookId' } }).then(res => console.log(res));
+// Post.join({ table: Review, on: { 'Post.id': 'Review.Post_id' } }, { table: Product, on: { 'Review.Product_upc': 'Product.upc' } }, { table: User, on: { 'Post.User_facebookId': 'User.facebookId' } }).then(res => console.log(res));
 // Product.fetch({ upc: 20394892038402934 }).then(res => console.log(res));
 // Product.join({ table: Brand, on: { 'Product.Brand_id': 'Brand.id' } }).then(res => console.log(res));
 // Product.match({ upc: [20394892038402934, 23894238974] }).then(res => console.log(res));
 
-module.exports = { User, Product, Brand, Category, ProductCategory, Ingredient, Tag, ProductTag, Image, Post, Review, Wish, ProductIngredient, Follow };
+module.exports = { User, Product, Brand, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, Review, Wish, ProductIngredient, Follow };
