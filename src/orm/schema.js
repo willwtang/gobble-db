@@ -28,7 +28,7 @@ class Schema {
   // DATE TYPES
   timestamp(create) {
     if (this.columns.hasOwnProperty('created_at')) throw new Error('Already has created at column');
-    this.columns.created_at = { name: 'created_at', type: 'TIMESTAMP', time: create ? 'create' : 'update' };
+    this.columns.created_at = { name: `${this.tableName}_created_at`, type: 'TIMESTAMP', time: create ? 'create' : 'update' };
   }
 
 // ############################################### OPTIONS FEATURES ###############################################

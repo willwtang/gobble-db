@@ -14,8 +14,8 @@ class Pool {
 
 const host = process.env.HOST || '127.0.0.1';
 const user = process.env.DB_USER || 'root';
-const password = process.env.DB_PASSWORD;
-const database = process.env.APP_NAME;
+const password = process.env.DB_PASSWORD || 'abc';
+const database = process.env.APP_NAME || 'gobble_db';
 
 const pool = new Pool({ host, user, password, database });
 

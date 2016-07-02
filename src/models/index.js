@@ -15,8 +15,8 @@ const Follow = new Table('Follow', follow => {
   follow.bigInt('followed', 64, 'UNSIGNED');
 
   follow.primaryKey(null, 'follower', 'followed');
-  follow.foreignKey('Follow_fk_follower', 'follower', 'User', 'facebookId');
-  follow.foreignKey('Follow_fk_followed', 'followed', 'User', 'facebookId');
+  follow.foreignKey('Follow_fk_follower', 'follower', 'User', 'facebook_id');
+  follow.foreignKey('Follow_fk_followed', 'followed', 'User', 'facebook_id');
 });
 
 const Product = new Table('Product', product => {
@@ -96,13 +96,16 @@ const ProductTag = new Table('Product_Tag', join => {
 });
 
 const Post = new Table('Post', post => {
-  post.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
-  post.bigInt('User_facebookId', 64, 'UNSIGNED');
+  post.int('postId', 64, 'UNSIGNED').autoIncrement().primaryKey();
+  post.bigInt('User_facebook_id', 64, 'UNSIGNED');
+  post.bigInt('Product_upc', 64, 'UNSIGNED');
   post.int('likesCache', 64, 'UNSIGNED');
   post.text('comment');
+  post.int('rating');
   post.int('parentId', 64, 'UNSIGNED');
 
-  post.foreignKey('Post_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
+  post.foreignKey('Post_fk_User_facebook_id', 'User_facebook_id', 'User', 'facebook_id');
+  post.foreignKey('Post_fk_Product_upc', 'Product_upc', 'Product', 'upc');
 
   post.timestamp();
 });
@@ -114,39 +117,39 @@ const Media = new Table('Image', media => {
   media.varChar('urlCompressed', 255);
   media.varChar('urlCompressedS3', 255);
   media.bigInt('Product_upc', 64, 'UNSIGNED');
-  media.bigInt('User_facebookId', 64, 'UNSIGNED');
+  media.bigInt('User_facebook_id', 64, 'UNSIGNED');
 
   media.foreignKey('Image_fk_Product_upc', 'Product_upc', 'Product', 'upc');
-  media.foreignKey('Image_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
+  media.foreignKey('Image_fk_User_facebook_id', 'User_facebook_id', 'User', 'facebook_id');
   media.foreignKey('Image_fk_Post_id', 'Post_id', 'Post', 'id');
 
   media.timestamp();
 });
 
-const Review = new Table('Review', review => {
-  review.int('reviewId', 64, 'UNSIGNED').autoIncrement().primaryKey();
-  review.int('Post_id', 64, 'UNSIGNED');
-  review.bigInt('Product_upc', 64, 'UNSIGNED');
-  review.int('rating');
-  review.bigInt('User_facebookId', 64, 'UNSIGNED');
-  review.timestamp();
+// const Review = new Table('Review', review => {
+//   review.int('reviewId', 64, 'UNSIGNED').autoIncrement().primaryKey();
+//   review.int('Post_id', 64, 'UNSIGNED');
+//   review.bigInt('Product_upc', 64, 'UNSIGNED');
+//   review.int('rating');
+//   review.bigInt('User_facebook_id', 64, 'UNSIGNED');
+//   review.timestamp();
 
-  review.foreignKey('Review_fk_Product_upc', 'Product_upc', 'Product', 'upc');
-  review.foreignKey('Review_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
-  review.foreignKey('Review_fk_Post_id', 'Post_id', 'Post', 'id');
-});
+//   review.foreignKey('Review_fk_Product_upc', 'Product_upc', 'Product', 'upc');
+//   review.foreignKey('Review_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
+//   review.foreignKey('Review_fk_Post_id', 'Post_id', 'Post', 'id');
+// });
 
-const Wish = new Table('Wish', wish => {
-  wish.int('wishId', 64, 'UNSIGNED').autoIncrement().primaryKey();
-  wish.int('Post_id', 64, 'UNSIGNED');
-  wish.bigInt('Product_upc', 64, 'UNSIGNED');
-  wish.bigInt('User_facebookId', 64, 'UNSIGNED');
-  wish.foreignKey('Wish_fk_Product_upc', 'Product_upc', 'Product', 'upc');
-  wish.foreignKey('Wish_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
-  wish.foreignKey('Wish_fk_Post_id', 'Post_id', 'Post', 'id');
+// const Wish = new Table('Wish', wish => {
+//   wish.int('wishId', 64, 'UNSIGNED').autoIncrement().primaryKey();
+//   wish.int('Post_id', 64, 'UNSIGNED');
+//   wish.bigInt('Product_upc', 64, 'UNSIGNED');
+//   wish.bigInt('User_facebookId', 64, 'UNSIGNED');
+//   wish.foreignKey('Wish_fk_Product_upc', 'Product_upc', 'Product', 'upc');
+//   wish.foreignKey('Wish_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
+//   wish.foreignKey('Wish_fk_Post_id', 'Post_id', 'Post', 'id');
 
-  wish.timestamp();
-});
+//   wish.timestamp();
+// });
 
 // Product.save({ upc: 20394892038402934, name: 'cereal', Brand_id: 1 });
 // Product.save({ upc: 23894238974, name: 'cereal', Brand_id: 1 });
@@ -160,4 +163,4 @@ const Wish = new Table('Wish', wish => {
 // Product.join({ table: Brand, on: { 'Product.Brand_id': 'Brand.id' } }).then(res => console.log(res));
 // Product.match({ upc: [20394892038402934, 23894238974] }).then(res => console.log(res));
 
-module.exports = { User, Product, Brand, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, Review, Wish, ProductIngredient, Follow };
+module.exports = { User, Product, Brand, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, ProductIngredient, Follow };
