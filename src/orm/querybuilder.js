@@ -29,8 +29,7 @@ class QueryBuilder {
     if (obj.hasOwnProperty('limit')) limit = (utility.type(obj.limit) === 'array' ? obj.limit.join(',') : obj.limit);
 
     sequence.push(`SELECT ${what} FROM ${fromStr}`);
-    if (orderBy) sequence.push(`ORDER BY ${orderBy}`);
-    if (limit) sequence.push(`LIMIT ${limit}`);
+
     if (where) {
       this.where(where);
       sequence.push(this.sequence.pop());
@@ -39,7 +38,8 @@ class QueryBuilder {
       this.whereIn(whereIn);
       sequence.push(this.sequence.pop());
     }
-
+    if (orderBy) sequence.push(`ORDER BY ${orderBy}`);
+    if (limit) sequence.push(`LIMIT ${limit}`);
     if (asObj) {
       this.sequence.push(`((${sequence.join(' ')}) AS ${asObj})`);
       return this;
