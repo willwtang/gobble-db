@@ -22,22 +22,54 @@ const Follow = new Table('Follow', follow => {
 const Product = new Table('Product', product => {
   product.bigInt('upc', 64, 'UNSIGNED').primaryKey();
   product.varChar('name', 255);
-  product.int('Brand_id', 64, 'UNSIGNED');
-  product.int('Nutrient_id', 64, 'UNSIGNED');
+  product.varChar('brand', 255);
+  product.int('energy', 64, 'UNSIGNED');
+  product.int('fat', 64, 'UNSIGNED');
+  product.int('saturatedfat', 64, 'UNSIGNED');
+  product.int('monounsaturatedfat', 64, 'UNSIGNED');
+  product.int('polyunsaturatedfat', 64, 'UNSIGNED');
+  product.int('omega3fat', 64, 'UNSIGNED');
+  product.int('transfat', 64, 'UNSIGNED');
+  product.int('cholesterol', 64, 'UNSIGNED');
+  product.int('carbohydrates', 64, 'UNSIGNED');
+  product.int('sugar', 64, 'UNSIGNED');
+  product.int('starch', 64, 'UNSIGNED');
+  product.int('polyols', 64, 'UNSIGNED');
+  product.int('fiber', 64, 'UNSIGNED');
+  product.int('protein', 64, 'UNSIGNED');
+  product.int('salt', 64, 'UNSIGNED');
+  product.int('sodium', 64, 'UNSIGNED');
+  product.int('alcohol', 64, 'UNSIGNED');
+  product.int('vitamina', 64, 'UNSIGNED');
+  product.int('vitaminc', 64, 'UNSIGNED');
+  product.int('vitamind', 64, 'UNSIGNED');
+  product.int('vitamine', 64, 'UNSIGNED');
+  product.int('vitamink', 64, 'UNSIGNED');
+  product.int('vitaminb1', 64, 'UNSIGNED');
+  product.int('vitaminb2', 64, 'UNSIGNED');
+  product.int('vitaminpp', 64, 'UNSIGNED');
+  product.int('vitaminb6', 64, 'UNSIGNED');
+  product.int('vitaminb9', 64, 'UNSIGNED');
+  product.int('vitaminb12', 64, 'UNSIGNED');
+  product.int('biotin', 64, 'UNSIGNED');
+  product.int('pantothenicacid', 64, 'UNSIGNED');
+  product.int('calcium', 64, 'UNSIGNED');
+  product.int('phosphorus', 64, 'UNSIGNED');
+  product.int('iron', 64, 'UNSIGNED');
+  product.int('magnesium', 64, 'UNSIGNED');
+  product.int('zinc', 64, 'UNSIGNED');
+  product.int('copper', 64, 'UNSIGNED');
+  product.int('manganese', 64, 'UNSIGNED');
+  product.int('selenium', 64, 'UNSIGNED');
+  product.int('chromium', 64, 'UNSIGNED');
+  product.int('molybdenum', 64, 'UNSIGNED');
+  product.int('iodine', 64, 'UNSIGNED');
+  product.int('caffeine', 64, 'UNSIGNED');
+  product.int('taurine', 64, 'UNSIGNED');
 
   product.timestamp();
-
-  product.foreignKey('Product_fk_Brand_id', 'Brand_id', 'Brand', 'id');
 });
 
-const Brand = new Table('Brand', brand => {
-  brand
-    .int('id', 64, 'UNSIGNED')
-    .autoIncrement()
-    .primaryKey();
-  brand.varChar('name', 255);
-  brand.timestamp();
-});
 
 const Category = new Table('Category', category => {
   category
@@ -61,9 +93,12 @@ const ProductCategory = new Table('Product_Category', join => {
 });
 
 const Ingredient = new Table('Ingredient', ingredient => {
-  ingredient.int('id', 64, 'UNSIGNED').primaryKey();
+  ingredient
+    .int('id', 64, 'UNSIGNED')
+    .notNull()
+    .autoIncrement()
+    .primaryKey();
   ingredient.varChar('name', 255);
-
   ingredient.timestamp();
 });
 
@@ -79,9 +114,12 @@ const ProductIngredient = new Table('Product_Ingredient', join => {
 });
 
 const Tag = new Table('Tag', tag => {
-  tag.int('id', 64, 'UNSIGNED').primaryKey();
+  tag
+    .int('id', 64, 'UNSIGNED')
+    .notNull()
+    .autoIncrement()
+    .primaryKey();
   tag.varChar('name', 255);
-
   tag.timestamp();
 });
 
@@ -164,4 +202,4 @@ const Media = new Table('Media', media => {
 // Product.join({ table: Brand, on: { 'Product.Brand_id': 'Brand.id' } }).then(res => console.log(res));
 // Product.match({ upc: [20394892038402934, 23894238974] }).then(res => console.log(res));
 
-module.exports = { User, Product, Brand, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, ProductIngredient, Follow };
+module.exports = { User, Product, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, ProductIngredient, Follow };
