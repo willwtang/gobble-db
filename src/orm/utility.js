@@ -9,7 +9,7 @@ const type = function(thing) {
 };
 
 const stringify = function(thing) {
-  return JSON.stringify(thing).replace(/"/g, '\'');
+  return JSON.stringify(thing).replace(/^"|"$/g, '\'');
 };
 
 module.exports = {

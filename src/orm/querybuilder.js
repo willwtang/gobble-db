@@ -192,7 +192,6 @@ class QueryBuilder {
 
   fire() {
     const query = this.sequence.join(' ');
-    console.log(query);
     return db.getConnection()
       .then(conn => conn.query(query).then(res => {
         db.release(conn);
@@ -246,7 +245,7 @@ class QueryBuilder {
     } else if (type === 'object') {
       const entries = Object.keys(obj);
       for (let i = 0; i < entries.length; i++) {
-        results.push(`${entries[i]} = ${utility.type(obj[entries[i]]) === 'number' ? obj[entries[i]] : `'${obj[entries[i]]}'`}`);
+        results.push(`${entries[i]} = ${utility.stringify(obj[entries[i]])}`);
       }
     }
     return results.join(' AND ');
@@ -284,8 +283,6 @@ class QueryBuilder {
   //   }
   // }
 }
-a = new QueryBuilder();
-console.log(a.materialize());
 
 // a = new QueryBuilder();
 module.exports = QueryBuilder;
