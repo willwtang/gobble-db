@@ -10,6 +10,14 @@ class QueryBuilder {
   raw(...args) {
     this.sequence.push(args.join(' '));
   }
+
+  updateSet(obj) {
+    const table = obj.table;
+    const set = this._parseColumnEquality(obj.set);
+
+    this.sequence.push(`UPDATE ${table} SET ${set}`);
+    return this;
+  }
   select(obj) {
     // obj = {
     //   what: { column: ${ALIAS} } OR [] OR string
@@ -276,7 +284,8 @@ class QueryBuilder {
   //   }
   // }
 }
-
+a = new QueryBuilder();
+console.log(a.materialize());
 
 // a = new QueryBuilder();
 module.exports = QueryBuilder;
