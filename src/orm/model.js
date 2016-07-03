@@ -57,7 +57,7 @@ class Model {
   }
 
   _join(qb, objs) {
-    for (let i = 0; i < objs.l*ength; i++) {
+    for (let i = 0; i < objs.length; i++) {
       const obj = objs[i];
       const table = obj.table.tableName;
       const on = obj.on;
