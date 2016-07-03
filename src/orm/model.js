@@ -15,6 +15,16 @@ class Model {
       .fire();
   }
 
+  increment(column, n) {
+    n = n || 1;
+    const qb = new QueryBuilder();
+    const set = {};
+    set[column] = `${column} + ${n}`;
+    return qb
+      .updateSet({ table: this.tableName, set })
+      .fire();
+  }
+
   match(where) {
     // where: {
     // columnName: []

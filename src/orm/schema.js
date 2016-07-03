@@ -78,6 +78,11 @@ class Schema {
     return this;
   }
 
+  default(value) {
+    if (!this.current) return;
+    this.current.default = value;
+  }
+
 // ############################################### PARSE FUNCTIONS ##################################################
 
   // PARSE HELPER FUNCTIONS
@@ -87,8 +92,15 @@ class Schema {
   }
 
   _parseHelperGeneric(obj) {
-    const query = `${obj.name} ${obj.type}${obj.width ? `(${utility.type(obj.width) === 'array' ? obj.width.join(',') : obj.width})` : ''}${obj.features.length ? `${obj.features.join(' ')}` : ''}`;
-    return query;
+    const sequence = [];
+    const width = obj.width ? `(${utility.type(obj.width) === 'array' ? obj.width.join(',') : obj.width})` : '';
+    const features = obj.features.length ? `${obj.features.join(' ')}` : '';
+    const name = obj.name;
+    const type = obj.type;
+    const defaultValue = obj.hasOwnProperty('default') ? `DEFAULT ${utility.stringify(obj.default)}` : '';
+
+    sequence.push(name, `${type}${width}`, features, defaultValue);
+    return sequence.join(' ');
   }
   _parseQueries() {
     const columns = Object.keys(this.columns);

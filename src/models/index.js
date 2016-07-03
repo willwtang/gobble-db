@@ -110,7 +110,7 @@ const Post = new Table('Post', post => {
   post.timestamp();
 });
 
-const Media = new Table('Image', media => {
+const Media = new Table('Media', media => {
   media.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
   media.int('Post_id', 64, 'UNSIGNED');
   media.varChar('url', 255);
@@ -118,6 +118,7 @@ const Media = new Table('Image', media => {
   media.varChar('urlCompressedS3', 255);
   media.bigInt('Product_upc', 64, 'UNSIGNED');
   media.bigInt('User_facebook_id', 64, 'UNSIGNED');
+  media.int('view', 64, 'UNSIGNED').default(0);
 
   media.foreignKey('Image_fk_Product_upc', 'Product_upc', 'Product', 'upc');
   media.foreignKey('Image_fk_User_facebook_id', 'User_facebook_id', 'User', 'facebook_id');

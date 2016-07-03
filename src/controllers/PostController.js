@@ -40,7 +40,8 @@ const getPostsById = function(arrayOfPostIds) {
     .fire());
 };
 // getPostsByDate('2016-07-30 00:00:00', 20).then(res => console.log(res));
-// Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
+Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
+Post.fetch({ User_facebook_id: "5" }).then(res => console.log(res));
 // User.save({ facebook_id: 1, first_name: 'Charles', last_name: 'Zhang' });
 // User.save({ facebook_id: 2, first_name: 'Will', last_name: 'Tang' });
 // Follow.save({ follower: 1, followed: 2 });

@@ -8,6 +8,10 @@ const type = function(thing) {
   return 'object';
 };
 
+const stringify = function(thing) {
+  return JSON.stringify(thing).replace(/^"|"$/g, '\'');
+};
+
 module.exports = {
-  type,
+  type, stringify,
 };
