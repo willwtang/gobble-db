@@ -1,4 +1,4 @@
-const { Product, Category, ProductCategory, Tag, ProductTag, Ingredient, ProductIngredient } = require('./../models');
+const { Product, Category, ProductCategory, Tag, ProductTag, Ingredient, ProductIngredient, Media } = require('./../models');
 
 const addCategories = (upc, categories) => {
   for (let i = 0; i < categories.length; i++) {
@@ -102,10 +102,12 @@ const postProduct = (req, res) => {
   const categories = req.body.categories;
   const tags = req.body.tags;
   const ingredients = req.body.ingredients;
+  const image = req.body.image;
 
   delete req.body.categories;
   delete req.body.tags;
   delete req.body.ingredients;
+  delete req.body.image;
 
   const product = req.body;
 
@@ -117,6 +119,14 @@ const postProduct = (req, res) => {
     .catch((err) => {
       console.error(err);
     });
+  Media.save({ Product_upc: Number(product.upc), url: image })
+    .then((results) => {
+      console.log(results);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
   // add the products categories
   addCategories(product.upc, categories);
   // add the products tags
