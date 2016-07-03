@@ -1,4 +1,4 @@
-const { Product, User, Review, Post, Follow } = require('../models');
+const { Product, User, Review, Post, Follow, Media } = require('../models');
 const QueryBuilder = require('../orm/querybuilder');
 
 const fetch = require('isomorphic-fetch');
@@ -44,10 +44,12 @@ const getPostsById = function(arrayOfPostIds) {
 };
 
 const postReview = function(req, res) {
-  console.log('inside db: ', req.body);
-  Product.fetch({ upc: req.body.upc })
+  console.log('inside post review db: ', req.body);
+  const post = req.body;
+  Product.fetch({ upc: post.upc })
     .then(results => {
       if (results.length === 0) {
+        Product.save({ upc: post.upc });
         console.log('adding product to product builder');
         fetch(`${gobbleProductBuilder}/api/product`, {
           method: 'POST',
@@ -55,7 +57,7 @@ const postReview = function(req, res) {
             Accept: 'application/json',
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ upc: req.body.upc }),
+          body: JSON.stringify({ upc: post.upc }),
         })
         .then(response => {
           console.log(response);
@@ -64,6 +66,22 @@ const postReview = function(req, res) {
           console.err(err);
         });
       }
+      Post.save({ User_facebook_id: post.facebookId, Product_upc: post.upc, comment: post.review, rating: post.rating })
+        .then((saveResult) => {
+          for (let i = 0; i < post.media.length; i++) {
+            Media.save({ Product_upc: post.upc, url: post.media[i], Post_id: saveResult.insertId, User_facebook_id: post.facebookId })
+              .then((mediaSave) => {
+                console.log(mediaSave);
+              })
+              .catch((err) => {
+                console.error(err);
+              });
+          }
+          console.log('review saved!!!: ', saveResult);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     });
   res.end();
 };
