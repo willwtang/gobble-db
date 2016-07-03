@@ -154,6 +154,7 @@ const Media = new Table('Media', media => {
   media.varChar('url', 255);
   media.varChar('urlCompressed', 255);
   media.varChar('urlCompressedS3', 255);
+  media.int('views', 64, 'UNSIGNED');
   media.bigInt('Product_upc', 64, 'UNSIGNED');
   media.bigInt('User_facebook_id', 64, 'UNSIGNED');
   media.int('view', 64, 'UNSIGNED').default(0);
