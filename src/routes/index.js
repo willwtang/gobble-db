@@ -8,6 +8,7 @@ const routes = (app) => {
   app.post('/db/review', PostController.postReview);
   app.post('/db/product', ProductController.postProduct);
   app.get('/db/product', ProductController.getProduct);
+  app.post('/db/like', PostController.likePost);
 };
 
 module.exports = routes;
