@@ -8,7 +8,7 @@ const gobbleProductBuilder = process.env.GOBBLE_PRODUCT_BUILDER;
 const getPostsByDate = function(date, limit) {
   const qb = new QueryBuilder();
   const qb2 = new QueryBuilder();
-  qb2.select({ what: '*', from: 'Post', limit, where: 'parentId IS NULL', orderBy: 'Post_created_at', as: 'T1' });
+  qb2.select({ what: '*', from: 'Post', limit, where: `parentId IS NULL AND date(Post.Post_created_at) < STR_TO_DATE('${date}', '%Y-%m-%d %H:%i:%s')`, orderBy: 'Post_created_at', as: 'T1' });
   return (qb
     .select({ what: '*', from: qb2.materialize() })
     .innerJoin({ target: 'User', on: { 'User.facebook_id': 'T1.User_facebook_id' } })
@@ -19,12 +19,10 @@ const getPostsByDate = function(date, limit) {
 
 const sendPostsByDate = function(req, res) {
   const date = req.query.date || dateNow();
-  console.log(date);
   const limit = 10;
   getPostsByDate(date, limit)
     .then(results => {
       res.send(results);
-      console.log(results);
     })
     .catch(err => {
       console.log(err);
@@ -40,7 +38,7 @@ const getPostsByFriends = function(date, limit, user) {
   return (qb
     .select({ what: '*', from: qb2.materialize() })
     .innerJoin({ target: 'User', on: { 'User.facebook_id': 'T1.followed' } })
-    .innerJoin({ target: 'Post', on: `Post.parentId IS NULL AND T1.followed = Post.User_facebook_id AND date(Post.Post_created_at) < date('${date}')` })
+    .innerJoin({ target: 'Post', on: `Post.parentId IS NULL AND T1.followed = Post.User_facebook_id AND date(Post.Post_created_at) < STR_TO_DATE('${date}', '%Y-%m-%d %H:%i:%s')` })
     .leftJoin({ target: 'Product', on: { 'Post.Product_upc': 'Product.upc' } })
     .orderBy('Post_created_at')
     .fire()
@@ -51,7 +49,6 @@ const sendPostsByFriends = function(req, res) {
   const date = req.query.date || dateNow();
   const limit = 10;
   const user = +req.query.facebookId;
-
   // if (date.charAt(0) === '"' && date.charAt(date.length - 1) === '"') {
   //   date = removeQuotes(date);
   // }
@@ -59,7 +56,6 @@ const sendPostsByFriends = function(req, res) {
   getPostsByFriends(date, limit, user)
     .then(results => {
       res.send(results);
-      console.log(results);
     })
     .catch(err => {
       console.log(err);
@@ -197,7 +193,6 @@ const getCommentsByParentId = function(parentId) {
 
 const sendCommentsByParentId = function(req, res) {
   const parentId = req.query.parentId;
-  console.log(parentId);
   getCommentsByParentId(parentId)
     .then(results => res.send(results))
     .catch(err => {
@@ -205,7 +200,48 @@ const sendCommentsByParentId = function(req, res) {
       res.status(404).send(err);
     });
 };
-// getPostsByDate('2016-07-30 00:00:00', 20).then(res => console.log(res));
+
+const getAllReviews = function() {
+  return (Post
+    .join({ table: Product, on: 'Post.rating IS NOT NULL AND Post.Product_upc = Product.upc' }));
+};
+
+const sendAllReviews = function(req, res) {
+  getAllReviews()
+    .then(results => res.send(results))
+    .catch(err => {
+      console.log('sendAllReviews error', err);
+      res.status(404).send(err);
+    });
+};
+
+const createDummyData = function(nUsers, nProducts, nPosts) {
+  for (let upc = 1; upc < nProducts; upc++) {
+    Product.save({ upc });
+  }
+  for (let facebookId = 1; facebookId < nUsers; facebookId++) {
+    User.save({ facebook_id: facebookId });
+  }
+  const memo = {};
+  for (let i = 0; i < nPosts; i++) {
+    let count = 0;
+    let user = ~~(Math.random() * nUsers) + 1;
+    let upc = ~~(Math.random() * nProducts) + 1;
+    memo[user] = memo[user] || new Set();
+    while (memo[user].has(upc) && count++ < 100) {
+      user = ~~(Math.random() * nUsers) + 1;
+      upc = ~~(Math.random() * nProducts) + 1;
+      memo[user] = memo[user] || new Set();
+    }
+    if (!memo[user].has(upc)) {
+      memo[user].add(upc);
+      Post.save({ User_facebook_id: user, Product_upc: upc, rating: ~~(Math.random() * 5) + 1 });
+    }
+  }
+};
+
+// getAllReviews().then(res => console.log(res));
+getPostsByDate(null, 20).then(res => console.log(res));
 // Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
 // Post.save({ User_facebook_id: 10153855879659926, Product_upc: 20394892038402936 });
 
@@ -220,5 +256,7 @@ const sendCommentsByParentId = function(req, res) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { sendPostsByDate, sendCommentsByParentId, sendPostsByFriends, sendPostsById, postReview, likePost, getCompressMedia, postCompressMedia };
+module.exports = { sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, sendPostsById, postReview, likePost, getCompressMedia, postCompressMedia };
 // getPostsByFriends('2017-01-01 00:00:00', 10, 2).then(res => console.log('#######', res));
+// console.log(dateNow());
+// getPostsByFriends('2016-07-30 00:00:00', 10, 1).then(res => console.log('#######', res));
