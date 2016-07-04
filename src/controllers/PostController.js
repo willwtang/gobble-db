@@ -1,5 +1,6 @@
 const { Product, User, Review, Post, Media, Like } = require('../models');
 const QueryBuilder = require('../orm/querybuilder');
+const { dateNow, removeQuotes } = require('../lib/utility');
 
 const fetch = require('isomorphic-fetch');
 const gobbleProductBuilder = process.env.GOBBLE_PRODUCT_BUILDER;
@@ -16,6 +17,22 @@ const getPostsByDate = function(date, limit) {
     .fire());
 };
 
+const sendPostsByDate = function(req, res) {
+  const date = req.query.date || dateNow();
+  console.log(date);
+  const limit = 10;
+  getPostsByDate(date, limit)
+    .then(results => {
+      res.send(results);
+      console.log(results);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(404).send(err);
+    });
+};
+
+
 const getPostsByFriends = function(date, limit, user) {
   const qb = new QueryBuilder();
   const qb2 = new QueryBuilder();
@@ -28,6 +45,26 @@ const getPostsByFriends = function(date, limit, user) {
     .orderBy('Post_created_at')
     .fire()
     .then(res => res.slice(0, limit + 1)));
+};
+
+const sendPostsByFriends = function(req, res) {
+  const date = req.query.date || dateNow();
+  const limit = 10;
+  const user = +req.query.facebookId;
+
+  // if (date.charAt(0) === '"' && date.charAt(date.length - 1) === '"') {
+  //   date = removeQuotes(date);
+  // }
+
+  getPostsByFriends(date, limit, user)
+    .then(results => {
+      res.send(results);
+      console.log(results);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(404).send(err);
+    });
 };
 
 const getPostsById = function(arrayOfPostIds) {
@@ -154,6 +191,25 @@ const postCompressMedia = function(req, res) {
 
 // getPostsByDate('2016-07-30 00:00:00', 20).then(res => console.log(res));
 // Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
+const getCommentsByParentId = function(parentId) {
+  return Post.join({ table: User, on: { 'Post.parentId': parentId, 'User.facebook_id': 'Post.User_facebook_id' } });
+};
+
+const sendCommentsByParentId = function(req, res) {
+  const parentId = req.query.parentId;
+  console.log(parentId);
+  getCommentsByParentId(parentId)
+    .then(results => res.send(results))
+    .catch(err => {
+      console.log(err);
+      res.status(404).send(err);
+    });
+};
+// getPostsByDate('2016-07-30 00:00:00', 20).then(res => console.log(res));
+// Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
+// Post.save({ User_facebook_id: 10153855879659926, Product_upc: 20394892038402936 });
+
+// getCommentsByParentId(5).then(r => console.log(r));
 // Post.fetch({ User_facebook_id: "5" }).then(res => console.log(res));
 // User.save({ facebook_id: 1, first_name: 'Charles', last_name: 'Zhang' });
 // User.save({ facebook_id: 2, first_name: 'Will', last_name: 'Tang' });
@@ -164,4 +220,5 @@ const postCompressMedia = function(req, res) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { getPostsByDate, getPostsByFriends, getPostsById, postReview, likePost, getCompressMedia, postCompressMedia };
+module.exports = { sendPostsByDate, sendCommentsByParentId, sendPostsByFriends, sendPostsById, postReview, likePost, getCompressMedia, postCompressMedia };
+// getPostsByFriends('2017-01-01 00:00:00', 10, 2).then(res => console.log('#######', res));
