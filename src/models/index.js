@@ -66,7 +66,7 @@ const Product = new Table('Product', product => {
   product.int('iodine', 64, 'UNSIGNED');
   product.int('caffeine', 64, 'UNSIGNED');
   product.int('taurine', 64, 'UNSIGNED');
-
+  product.int('potassium', 64, 'UNSIGNED');
   product.timestamp();
 });
 
