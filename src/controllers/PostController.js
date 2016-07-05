@@ -140,8 +140,16 @@ const getCompressMedia = function(req, res) {
     });
 };
 
-// const addComment = function(req, res) {
-// }
+const postCompressMedia = function(req, res) {
+  Media.save({ id: req.body.imageId, urlCompressed: req.body.compressedUrl })
+    .then((result) => {
+      console.log(result);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  res.end();
+};
 
 // getPostsByDate('2016-07-30 00:00:00', 20).then(res => console.log(res));
 // Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
@@ -155,4 +163,4 @@ const getCompressMedia = function(req, res) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { getPostsByDate, getPostsByFriends, getPostsById, postReview, likePost, getCompressMedia };
+module.exports = { getPostsByDate, getPostsByFriends, getPostsById, postReview, likePost, getCompressMedia, postCompressMedia };
