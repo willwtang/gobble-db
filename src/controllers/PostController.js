@@ -122,8 +122,35 @@ const likePost = function(req, res) {
   res.end();
 };
 
-// const addComment = function(req, res) {
-// }
+const getCompressMedia = function(req, res) {
+  const qb = new QueryBuilder();
+  qb.select({ what: 'id, url', from: 'Media', where: 'urlCompressed is null', orderBy: 'views' })
+    .fire()
+    .then((results) => {
+      console.log(results);
+      const pictures = [];
+      const limit = Math.min(results.length, 10);
+      for (let i = 0; i < limit; i++) {
+        pictures.push({ task: 'compress', imageId: results[i].id, imageUrl: results[i].url });
+      }
+      res.end(JSON.stringify(pictures));
+    })
+    .catch((err) => {
+      console.error(err);
+      res.end();
+    });
+};
+
+const postCompressMedia = function(req, res) {
+  Media.save({ id: req.body.imageId, urlCompressed: req.body.compressedUrl })
+    .then((result) => {
+      console.log(result);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  res.end();
+};
 
 // getPostsByDate('2016-07-30 00:00:00', 20).then(res => console.log(res));
 // Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
@@ -137,4 +164,4 @@ const likePost = function(req, res) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { getPostsByDate, getPostsByFriends, getPostsById, postReview, likePost };
+module.exports = { getPostsByDate, getPostsByFriends, getPostsById, postReview, likePost, getCompressMedia, postCompressMedia };
