@@ -1,6 +1,7 @@
 const UserController = require('./../controllers/UserController');
 const PostController = require('./../controllers/PostController');
 const ProductController = require('./../controllers/ProductController');
+const FollowController = require('./../controllers/FollowController');
 
 const routes = (app) => {
   app.get('/db/user', UserController.getUser);
