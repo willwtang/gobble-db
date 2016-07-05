@@ -66,7 +66,7 @@ const Product = new Table('Product', product => {
   product.int('iodine', 64, 'UNSIGNED');
   product.int('caffeine', 64, 'UNSIGNED');
   product.int('taurine', 64, 'UNSIGNED');
-
+  product.int('potassium', 64, 'UNSIGNED');
   product.timestamp();
 });
 
@@ -148,6 +148,17 @@ const Post = new Table('Post', post => {
   post.timestamp();
 });
 
+const Like = new Table('Likes', like => {
+  // like.int('postId', 64, 'UNSIGNED').autoIncrement().primaryKey();
+  like.bigInt('facebook_id', 64, 'UNSIGNED').primaryKey();
+  like.int('Post_id', 64, 'UNSIGNED');
+
+  like.foreignKey('Like_fk_facebook_id', 'facebook_id', 'User', 'facebook_id');
+  like.foreignKey('Like_fk_Post_id', 'Post_id', 'Post', 'postId');
+
+  like.timestamp();
+});
+
 const Media = new Table('Media', media => {
   media.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
   media.int('Post_id', 64, 'UNSIGNED');
@@ -203,4 +214,4 @@ const Media = new Table('Media', media => {
 // Product.join({ table: Brand, on: { 'Product.Brand_id': 'Brand.id' } }).then(res => console.log(res));
 // Product.match({ upc: [20394892038402934, 23894238974] }).then(res => console.log(res));
 
-module.exports = { User, Product, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, ProductIngredient, Follow };
+module.exports = { User, Product, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, ProductIngredient, Follow, Like };

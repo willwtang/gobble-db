@@ -1,4 +1,4 @@
-const { Product, User, Review, Post, Follow, Media } = require('../models');
+const { Product, User, Review, Post, Media, Like } = require('../models');
 const QueryBuilder = require('../orm/querybuilder');
 
 const fetch = require('isomorphic-fetch');
@@ -86,6 +86,45 @@ const postReview = function(req, res) {
   res.end();
 };
 
+const updateLikeCache = function(postId) {
+  Like.fetch({ Post_id: postId })
+    .then((result) => {
+      console.log('likes: ', result.length);
+      const likes = result.length;
+      Post.save({ postId, likesCache: likes })
+        .then(() => {
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+const likePost = function(req, res) {
+  console.log(req.body);
+  const facebookId = req.body.facebookId;
+  const postId = req.body.postId;
+
+  Like.destroy({ facebook_id: facebookId, Post_id: postId })
+    .then((result) => {
+      if (result.affectedRows === 0) {
+        Like.save({ facebook_id: facebookId, Post_id: postId })
+          .then(() => {
+            updateLikeCache(postId);
+          });
+      } else {
+        updateLikeCache(postId);
+      }
+    });
+  res.end();
+};
+
+// const addComment = function(req, res) {
+// }
+
 // getPostsByDate('2016-07-30 00:00:00', 20).then(res => console.log(res));
 // Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
 // Post.fetch({ User_facebook_id: "5" }).then(res => console.log(res));
@@ -98,4 +137,4 @@ const postReview = function(req, res) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { getPostsByDate, getPostsByFriends, getPostsById, postReview };
+module.exports = { getPostsByDate, getPostsByFriends, getPostsById, postReview, likePost };

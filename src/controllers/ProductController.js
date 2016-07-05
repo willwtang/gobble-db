@@ -1,4 +1,5 @@
 const { Product, Category, ProductCategory, Tag, ProductTag, Ingredient, ProductIngredient, Media } = require('./../models');
+const QueryBuilder = require('../orm/querybuilder');
 
 const addCategories = (upc, categories) => {
   for (let i = 0; i < categories.length; i++) {
@@ -137,6 +138,209 @@ const postProduct = (req, res) => {
   res.end();
 };
 
+const getProductHelper = (upc, callback) => {
+  let tasksLeft = 4;
+
+  const toReturn = {};
+  toReturn.categories = [];
+  toReturn.tags = [];
+  toReturn.ingredients = [];
+
+  const productQB = new QueryBuilder();
+  const categoriesQB = new QueryBuilder();
+  const tagsQB = new QueryBuilder();
+  const ingredientsQB = new QueryBuilder();
+
+  productQB.select({ what: '*', from: 'Product', where: `Product.upc = ${upc}` });
+  console.log(productQB.materialize());
+  productQB.fire()
+    .then((result) => {
+      toReturn.product = result[0];
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        callback(toReturn);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
+  //
+  categoriesQB.select({ what: 'Category.name', from: 'Category' })
+    .innerJoin({ target: 'product_category', on: { 'product_category.Category_id': 'category.id' } })
+    .where({ Product_upc: upc });
+
+  console.log(categoriesQB.materialize());
+  categoriesQB.fire()
+    .then((result) => {
+      for (let i = 0; i < result.length; i++) {
+        toReturn.categories.push(result[i].name);
+      }
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        callback(toReturn);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
+  //
+  tagsQB.select({ what: 'Tag.name', from: 'Tag' })
+    .innerJoin({ target: 'product_tag', on: { 'product_tag.Tag_id': 'tag.id' } })
+    .where({ Product_upc: upc });
+
+  console.log(tagsQB.materialize());
+  tagsQB.fire()
+    .then((result) => {
+      for (let i = 0; i < result.length; i++) {
+        toReturn.tags.push(result[i].name);
+      }
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        callback(toReturn);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
+  //
+  ingredientsQB.select({ what: 'Ingredient.name', from: 'Ingredient' })
+    .innerJoin({ target: 'product_ingredient', on: { 'product_ingredient.Ingredient_id': 'Ingredient.id' } })
+    .where({ Product_upc: upc });
+
+  console.log(ingredientsQB.materialize());
+  ingredientsQB.fire()
+    .then((result) => {
+      for (let i = 0; i < result.length; i++) {
+        toReturn.ingredients.push(result[i].name);
+      }
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        callback(toReturn);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+// function timeStamp() {
+//   return new Date().toISOString().slice(0, 19)
+//   .replace('T', ' ');
+// }
+
+const getProductsByDate = function(req, res) {
+  const date = req.query.date;
+  const qb = new QueryBuilder();
+  qb.select({ what: 'upc', from: 'Product', where: `Product.Product_created_at > ${date}` });
+  console.log(qb.materialize());
+  qb.fire()
+    .then((result) => {
+      console.log(result);
+      const toReturn = [];
+      let products = result.length;
+      for (let i = 0; i < result.length; i++) {
+        getProductHelper(result[i].upc, (product) => {
+          toReturn.push(product);
+          if (--products === 0) {
+            res.end(JSON.stringify(toReturn));
+          }
+        });
+      }
+    });
+};
+
+const getProduct = (req, res) => {
+  const upc = req.query.upc;
+  let tasksLeft = 4;
+
+  const toReturn = {};
+  toReturn.categories = [];
+  toReturn.tags = [];
+  toReturn.ingredients = [];
+
+  const productQB = new QueryBuilder();
+  const categoriesQB = new QueryBuilder();
+  const tagsQB = new QueryBuilder();
+  const ingredientsQB = new QueryBuilder();
+
+  productQB.select({ what: '*', from: 'Product', where: `Product.upc = ${upc}` });
+  console.log(productQB.materialize());
+  productQB.fire()
+    .then((result) => {
+      toReturn.product = result[0];
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        res.end(JSON.stringify(toReturn));
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
+  //
+  categoriesQB.select({ what: 'Category.name', from: 'Category' })
+    .innerJoin({ target: 'product_category', on: { 'product_category.Category_id': 'category.id' } })
+    .where({ Product_upc: upc });
+
+  console.log(categoriesQB.materialize());
+  categoriesQB.fire()
+    .then((result) => {
+      for (let i = 0; i < result.length; i++) {
+        toReturn.categories.push(result[i].name);
+      }
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        res.end(JSON.stringify(toReturn));
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
+  //
+  tagsQB.select({ what: 'Tag.name', from: 'Tag' })
+    .innerJoin({ target: 'product_tag', on: { 'product_tag.Tag_id': 'tag.id' } })
+    .where({ Product_upc: upc });
+
+  console.log(tagsQB.materialize());
+  tagsQB.fire()
+    .then((result) => {
+      for (let i = 0; i < result.length; i++) {
+        toReturn.tags.push(result[i].name);
+      }
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        res.end(JSON.stringify(toReturn));
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
+  //
+  ingredientsQB.select({ what: 'Ingredient.name', from: 'Ingredient' })
+    .innerJoin({ target: 'product_ingredient', on: { 'product_ingredient.Ingredient_id': 'Ingredient.id' } })
+    .where({ Product_upc: upc });
+
+  console.log(ingredientsQB.materialize());
+  ingredientsQB.fire()
+    .then((result) => {
+      for (let i = 0; i < result.length; i++) {
+        toReturn.ingredients.push(result[i].name);
+      }
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        res.end(JSON.stringify(toReturn));
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
 module.exports = {
-  postProduct,
+  postProduct, getProduct, getProductsByDate,
 };

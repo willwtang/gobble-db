@@ -7,6 +7,9 @@ const routes = (app) => {
   app.post('/db/user', UserController.postUser);
   app.post('/db/review', PostController.postReview);
   app.post('/db/product', ProductController.postProduct);
+  app.get('/db/product', ProductController.getProduct);
+  app.get('/db/productsByDate', ProductController.getProductsByDate);
+  app.post('/db/like', PostController.likePost);
 };
 
 module.exports = routes;
