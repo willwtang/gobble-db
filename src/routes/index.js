@@ -10,6 +10,8 @@ const routes = (app) => {
   app.get('/db/product', ProductController.getProduct);
   app.get('/db/productsByDate', ProductController.getProductsByDate);
   app.post('/db/like', PostController.likePost);
+  app.get('/db/compressMedia', PostController.getCompressMedia);
+  app.post('/db/compressMedia', PostController.postCompressMedia);
 };
 
 module.exports = routes;
