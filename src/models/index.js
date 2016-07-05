@@ -137,7 +137,7 @@ const Post = new Table('Post', post => {
   post.int('postId', 64, 'UNSIGNED').autoIncrement().primaryKey();
   post.bigInt('User_facebook_id', 64, 'UNSIGNED');
   post.bigInt('Product_upc', 64, 'UNSIGNED');
-  post.int('likesCache', 64, 'UNSIGNED');
+  post.int('likesCache', 64, 'UNSIGNED').default(0);
   post.text('comment');
   post.int('rating');
   post.int('parentId', 64, 'UNSIGNED');

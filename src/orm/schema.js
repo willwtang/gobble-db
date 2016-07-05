@@ -79,8 +79,9 @@ class Schema {
   }
 
   default(value) {
-    if (!this.current) return;
+    if (!this.current) return this;
     this.current.default = value;
+    return this;
   }
 
 // ############################################### PARSE FUNCTIONS ##################################################
