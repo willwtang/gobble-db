@@ -122,6 +122,24 @@ const likePost = function(req, res) {
   res.end();
 };
 
+const getCompressMedia = function(req, res) {
+  const qb = new QueryBuilder();
+  qb.select({ what: 'id, url', from: 'Media', where: 'urlCompressed is null' })
+    .fire()
+    .then((results) => {
+      console.log(results);
+      const pictures = [];
+      for (let i = 0; i < results.length; i++) {
+        pictures.push({ task: 'compress', imageId: results[i].id, imageUrl: results[i].url });
+      }
+      res.end(JSON.stringify(pictures));
+    })
+    .catch((err) => {
+      console.error(err);
+      res.end();
+    });
+};
+
 // const addComment = function(req, res) {
 // }
 
@@ -137,4 +155,4 @@ const likePost = function(req, res) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { getPostsByDate, getPostsByFriends, getPostsById, postReview, likePost };
+module.exports = { getPostsByDate, getPostsByFriends, getPostsById, postReview, likePost, getCompressMedia };
