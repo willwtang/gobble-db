@@ -12,6 +12,7 @@ const routes = (app) => {
   app.post('/db/like', PostController.likePost);
   app.get('/db/compressMedia', PostController.getCompressMedia);
   app.post('/db/compressMedia', PostController.postCompressMedia);
+  app.get('/db/postsById', PostController.getPostsById);
 };
 
 module.exports = routes;
