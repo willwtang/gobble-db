@@ -139,17 +139,19 @@ const postProduct = (req, res) => {
 };
 
 const getProductHelper = (upc, callback) => {
-  let tasksLeft = 4;
+  let tasksLeft = 5;
 
   const toReturn = {};
   toReturn.categories = [];
   toReturn.tags = [];
   toReturn.ingredients = [];
+  toReturn.media = [];
 
   const productQB = new QueryBuilder();
   const categoriesQB = new QueryBuilder();
   const tagsQB = new QueryBuilder();
   const ingredientsQB = new QueryBuilder();
+  const mediaQB = new QueryBuilder();
 
   productQB.select({ what: '*', from: 'Product', where: `Product.upc = ${upc}` });
   console.log(productQB.materialize());
@@ -215,6 +217,24 @@ const getProductHelper = (upc, callback) => {
     .then((result) => {
       for (let i = 0; i < result.length; i++) {
         toReturn.ingredients.push(result[i].name);
+      }
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        callback(toReturn);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
+  mediaQB.select({ what: 'url, urlCompressed, urlCompressedS3', from: 'Media' })
+    .where({ Product_upc: upc });
+
+  console.log(mediaQB.materialize());
+  mediaQB.fire()
+    .then((results) => {
+      for (let i = 0; i < results.length; i++) {
+        toReturn.media.push(results[i]);
       }
       if (--tasksLeft === 0) {
         console.log(toReturn);
@@ -254,17 +274,19 @@ const getProductsByDate = function(req, res) {
 
 const getProduct = (req, res) => {
   const upc = req.query.upc;
-  let tasksLeft = 4;
+  let tasksLeft = 5;
 
   const toReturn = {};
   toReturn.categories = [];
   toReturn.tags = [];
   toReturn.ingredients = [];
+  toReturn.media = [];
 
   const productQB = new QueryBuilder();
   const categoriesQB = new QueryBuilder();
   const tagsQB = new QueryBuilder();
   const ingredientsQB = new QueryBuilder();
+  const mediaQB = new QueryBuilder();
 
   productQB.select({ what: '*', from: 'Product', where: `Product.upc = ${upc}` });
   console.log(productQB.materialize());
@@ -330,6 +352,24 @@ const getProduct = (req, res) => {
     .then((result) => {
       for (let i = 0; i < result.length; i++) {
         toReturn.ingredients.push(result[i].name);
+      }
+      if (--tasksLeft === 0) {
+        console.log(toReturn);
+        res.end(JSON.stringify(toReturn));
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
+  mediaQB.select({ what: 'url, urlCompressed, urlCompressedS3', from: 'Media' })
+    .where({ Product_upc: upc });
+
+  console.log(mediaQB.materialize());
+  mediaQB.fire()
+    .then((results) => {
+      for (let i = 0; i < results.length; i++) {
+        toReturn.media.push(results[i]);
       }
       if (--tasksLeft === 0) {
         console.log(toReturn);
