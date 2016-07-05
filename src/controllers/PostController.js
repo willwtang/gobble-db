@@ -8,13 +8,14 @@ const gobbleProductBuilder = process.env.GOBBLE_PRODUCT_BUILDER;
 const getPostsByDate = function(date, limit) {
   const qb = new QueryBuilder();
   const qb2 = new QueryBuilder();
-  qb2.select({ what: '*', from: 'Post', limit, where: `parentId IS NULL AND date(Post.Post_created_at) < STR_TO_DATE('${date}', '%Y-%m-%d %H:%i:%s')`, orderBy: 'Post_created_at', as: 'T1' });
+  qb2.select({ what: '*', from: 'Post', where: `parentId IS NULL AND date(Post.Post_created_at) < STR_TO_DATE('${date}', '%Y-%m-%d %H:%i:%s')`, orderBy: 'Post_created_at', as: 'T1' });
   return (qb
     .select({ what: '*', from: qb2.materialize() })
     .innerJoin({ target: 'User', on: { 'User.facebook_id': 'T1.User_facebook_id' } })
     .leftJoin({ target: 'Product', on: { 'T1.Product_upc': 'Product.upc' } })
-    .orderBy('T1.Post_created_at')
-    .fire());
+    .orderBy('T1.Post_created_at DESC')
+    .fire()
+    .then(res => res.slice(0, limit)));
 };
 
 const sendPostsByDate = function(req, res) {
@@ -40,7 +41,7 @@ const getPostsByFriends = function(date, limit, user) {
     .innerJoin({ target: 'User', on: { 'User.facebook_id': 'T1.followed' } })
     .innerJoin({ target: 'Post', on: `Post.parentId IS NULL AND T1.followed = Post.User_facebook_id AND date(Post.Post_created_at) < STR_TO_DATE('${date}', '%Y-%m-%d %H:%i:%s')` })
     .leftJoin({ target: 'Product', on: { 'Post.Product_upc': 'Product.upc' } })
-    .orderBy('Post_created_at')
+    .orderBy('Post_created_at DESC')
     .fire()
     .then(res => res.slice(0, limit + 1)));
 };
@@ -215,11 +216,13 @@ const sendAllReviews = function(req, res) {
     });
 };
 
-// const createDummyComments = function(nUsers, nn) {
-//   const user = ~~(Math.random() * nUsers) + 1;
-//   const parent 
-  
-// };
+const createDummyComments = function(nUsers, nParents, nComments) {
+  for (let i = 0; i < nComments; i++) {
+    const user = ~~(Math.random() * nUsers) + 1;
+    const parent = ~~(Math.random() * nParents) + 1;
+    Post.save({ comment: 'this is a test comment', User_facebook_id: user, parentId: parent });
+  }
+};
 
 const createDummyData = function(nUsers, nProducts, nPosts) {
   for (let upc = 1; upc < nProducts; upc++) {
@@ -233,7 +236,6 @@ const createDummyData = function(nUsers, nProducts, nPosts) {
     let count = 0;
     let user = ~~(Math.random() * nUsers) + 1;
     let upc = ~~(Math.random() * nProducts) + 1;
-    if (!parent) parentId = undefined;
     memo[user] = memo[user] || new Set();
     while (memo[user].has(upc) && count++ < 100) {
       user = ~~(Math.random() * nUsers) + 1;
@@ -246,8 +248,8 @@ const createDummyData = function(nUsers, nProducts, nPosts) {
     }
   }
 };
-
-
+// Post.save({ comment: 'top test', User_facebook_id: 1, Product_upc: 5, rating: 5 });
+// createDummyComments(200, 200, 200);
 // getAllReviews().then(res => console.log(res));
 // getPostsByDate(null, 20).then(res => console.log(res));
 // Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
@@ -264,7 +266,7 @@ const createDummyData = function(nUsers, nProducts, nPosts) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, sendPostsById, postReview, likePost, getCompressMedia, postCompressMedia };
+module.exports = { createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, likePost, getCompressMedia, postCompressMedia };
 // getPostsByFriends('2017-01-01 00:00:00', 10, 2).then(res => console.log('#######', res));
 // console.log(dateNow());
 // getPostsByFriends('2016-07-30 00:00:00', 10, 1).then(res => console.log('#######', res));
