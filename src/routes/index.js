@@ -6,6 +6,7 @@ const FollowController = require('./../controllers/FollowController');
 const routes = (app) => {
   app.get('/db/user', UserController.getUser);
   app.post('/db/user', UserController.postUser);
+
   app.post('/db/review', PostController.postReview);
   app.post('/db/product', ProductController.postProduct);
   app.get('/db/product', ProductController.getProduct);
@@ -18,6 +19,10 @@ const routes = (app) => {
   app.post('/db/follow', FollowController.postFollow);
   app.get('/db/followers', FollowController.getFollowers);
   app.get('/db/following', FollowController.getFollowing);
+  app.get('/db/is_following', FollowController.getIsFollowing);
+
+  app.post('/db/review', PostController.postReview);
+  app.post('/db/product', ProductController.postProduct);
 };
 
 module.exports = routes;

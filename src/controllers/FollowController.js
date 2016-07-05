@@ -25,6 +25,27 @@ const postFollow = (req, res) => {
     });
 };
 
+const getIsFollowing = (req, res) => {
+  const followerId = req.query.follower_id;
+  const followedId = req.query.followed_id;
+  Follow.fetch({ follower: followerId, followed: followedId })
+    .then(results => results[0])
+    .then(follow => {
+      if (follow) {
+        res.status(200).json(true);
+      } else {
+        res.status(200).json(false);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({
+        description: 'Gobble DB - Follow.isFollowing',
+        error: err,
+      });
+    });
+};
+
 const getUserById = (facebookId, callback) => {
   User.fetch({ facebook_id: facebookId })
     .then(results => results[0])
@@ -80,6 +101,7 @@ const getFollowing = (req, res) => {
 
 module.exports = {
   postFollow,
+  getIsFollowing,
   getFollowers,
   getFollowing,
 };
