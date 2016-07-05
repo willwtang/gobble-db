@@ -124,12 +124,13 @@ const likePost = function(req, res) {
 
 const getCompressMedia = function(req, res) {
   const qb = new QueryBuilder();
-  qb.select({ what: 'id, url', from: 'Media', where: 'urlCompressed is null' })
+  qb.select({ what: 'id, url', from: 'Media', where: 'urlCompressed is null', orderBy: 'views' })
     .fire()
     .then((results) => {
       console.log(results);
       const pictures = [];
-      for (let i = 0; i < results.length; i++) {
+      const limit = Math.min(results.length, 10);
+      for (let i = 0; i < limit; i++) {
         pictures.push({ task: 'compress', imageId: results[i].id, imageUrl: results[i].url });
       }
       res.end(JSON.stringify(pictures));
