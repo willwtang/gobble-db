@@ -14,6 +14,10 @@ const routes = (app) => {
   app.get('/db/compressMedia', PostController.getCompressMedia);
   app.post('/db/compressMedia', PostController.postCompressMedia);
   app.get('/db/postsById', PostController.getPostsById);
+
+  app.post('/db/follow', FollowController.postFollow);
+  app.get('/db/followers', FollowController.getFollowers);
+  app.get('/db/following', FollowController.getFollowing);
 };
 
 module.exports = routes;
