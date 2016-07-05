@@ -233,9 +233,8 @@ const getProductHelper = (upc, callback) => {
   console.log(mediaQB.materialize());
   mediaQB.fire()
     .then((results) => {
-      console.log(results);
       for (let i = 0; i < results.length; i++) {
-        // toReturn.media.push(results[i].name);
+        toReturn.media.push(results[i]);
       }
       if (--tasksLeft === 0) {
         console.log(toReturn);
