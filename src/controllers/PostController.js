@@ -4,6 +4,7 @@ const { dateNow, removeQuotes } = require('../lib/utility');
 
 const fetch = require('isomorphic-fetch');
 const gobbleProductBuilder = process.env.GOBBLE_PRODUCT_BUILDER;
+const gobbleRippleUrl = process.env.GOBBLE_RIPPLE_URL;
 
 const getPostsByDate = function(date, limit) {
   const qb = new QueryBuilder();
@@ -64,22 +65,48 @@ const sendPostsByFriends = function(req, res) {
     });
 };
 
-const getPostsById = function(arrayOfPostIds) {
+const getPostsById = function(req, res) {
+  const arrayOfPostIds = JSON.parse(req.query.posts);
+  console.log(arrayOfPostIds);
   const qb = new QueryBuilder();
   const nested = new QueryBuilder();
 
   nested.select({ what: '*', from: 'Post', whereIn: { 'Post.postId': arrayOfPostIds }, as: 'T1' });
 
-  return (qb
-    .select({ what: '*', from: nested })
-    .innerJoin({ target: 'User', on: 'Post.User_facebook_id = User.facebook_id' })
-    .innerJoin({ target: 'Product', on: 'Post.Product_upc = Product.upc' })
-    .fire());
+  qb
+    .select({ what: '*', from: nested.materialize() })
+    .innerJoin({ target: 'User', on: 'T1.User_facebook_id = User.facebook_id' })
+    .innerJoin({ target: 'Product', on: 'T1.Product_upc = Product.upc' })
+    .fire()
+    .then((results) => {
+      res.end(JSON.stringify(results));
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+const notifyRipple = function(post) {
+  fetch(`${gobbleRippleUrl}/api/post`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(post),
+  })
+  .then(response => {
+    console.log(response);
+  })
+  .catch(err => {
+    console.err(err);
+  });
 };
 
 const postReview = function(req, res) {
   console.log('inside post review db: ', req.body);
   const post = req.body;
+
   Product.fetch({ upc: post.upc })
     .then(results => {
       if (results.length === 0) {
@@ -102,6 +129,7 @@ const postReview = function(req, res) {
       }
       Post.save({ User_facebook_id: post.facebookId, Product_upc: post.upc, comment: post.review, rating: post.rating })
         .then((saveResult) => {
+          notifyRipple({ task: 'post', userId: post.facebookId, postId: saveResult.insertId });
           for (let i = 0; i < post.media.length; i++) {
             Media.save({ Product_upc: post.upc, url: post.media[i], Post_id: saveResult.insertId, User_facebook_id: post.facebookId })
               .then((mediaSave) => {
@@ -266,7 +294,7 @@ const createDummyData = function(nUsers, nProducts, nPosts) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, likePost, getCompressMedia, postCompressMedia };
+module.exports = { createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, likePost, getCompressMedia, postCompressMedia, getPostsById };
 // getPostsByFriends('2017-01-01 00:00:00', 10, 2).then(res => console.log('#######', res));
 // console.log(dateNow());
 // getPostsByFriends('2016-07-30 00:00:00', 10, 1).then(res => console.log('#######', res));
