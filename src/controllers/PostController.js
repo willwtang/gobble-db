@@ -122,6 +122,9 @@ const likePost = function(req, res) {
   res.end();
 };
 
+// const addComment = function(req, res) {
+// }
+
 // getPostsByDate('2016-07-30 00:00:00', 20).then(res => console.log(res));
 // Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
 // Post.fetch({ User_facebook_id: "5" }).then(res => console.log(res));
