@@ -215,6 +215,12 @@ const sendAllReviews = function(req, res) {
     });
 };
 
+// const createDummyComments = function(nUsers, nn) {
+//   const user = ~~(Math.random() * nUsers) + 1;
+//   const parent 
+  
+// };
+
 const createDummyData = function(nUsers, nProducts, nPosts) {
   for (let upc = 1; upc < nProducts; upc++) {
     Product.save({ upc });
@@ -227,6 +233,7 @@ const createDummyData = function(nUsers, nProducts, nPosts) {
     let count = 0;
     let user = ~~(Math.random() * nUsers) + 1;
     let upc = ~~(Math.random() * nProducts) + 1;
+    if (!parent) parentId = undefined;
     memo[user] = memo[user] || new Set();
     while (memo[user].has(upc) && count++ < 100) {
       user = ~~(Math.random() * nUsers) + 1;
@@ -235,13 +242,14 @@ const createDummyData = function(nUsers, nProducts, nPosts) {
     }
     if (!memo[user].has(upc)) {
       memo[user].add(upc);
-      Post.save({ User_facebook_id: user, Product_upc: upc, rating: ~~(Math.random() * 5) + 1 });
+      Post.save({ comment: 'this is a test', User_facebook_id: user, Product_upc: upc, rating: ~~(Math.random() * 5) + 1 });
     }
   }
 };
 
+
 // getAllReviews().then(res => console.log(res));
-getPostsByDate(null, 20).then(res => console.log(res));
+// getPostsByDate(null, 20).then(res => console.log(res));
 // Post.save({ User_facebook_id: 2, Product_upc: 20394892038402936 });
 // Post.save({ User_facebook_id: 10153855879659926, Product_upc: 20394892038402936 });
 
@@ -256,7 +264,7 @@ getPostsByDate(null, 20).then(res => console.log(res));
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, sendPostsById, postReview, likePost, getCompressMedia, postCompressMedia };
+module.exports = { createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, sendPostsById, postReview, likePost, getCompressMedia, postCompressMedia };
 // getPostsByFriends('2017-01-01 00:00:00', 10, 2).then(res => console.log('#######', res));
 // console.log(dateNow());
 // getPostsByFriends('2016-07-30 00:00:00', 10, 1).then(res => console.log('#######', res));
