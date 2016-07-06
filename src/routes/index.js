@@ -18,6 +18,7 @@ const routes = (app) => {
 
   app.post('/db/follow', FollowController.postFollow);
   app.get('/db/followers', FollowController.getFollowers);
+  app.get('/db/follower_ids', FollowController.getFollowerIds);
   app.get('/db/following', FollowController.getFollowing);
   app.get('/db/is_following', FollowController.getIsFollowing);
 

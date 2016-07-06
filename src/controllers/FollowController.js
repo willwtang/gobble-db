@@ -78,6 +78,21 @@ const getFollowers = (req, res) => {
     });
 };
 
+const getFollowerIds = (req, res) => {
+  Follow.fetch({ followed: req.query.facebook_id })
+    .then(follows => follows.map(follow => follow.follower))
+    .then(followerIds => {
+      res.status(200).json(followerIds);
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({
+        description: 'Gobble DB - Follow.fetch - getFollowerIds',
+        error: err,
+      });
+    });
+};
+
 const getFollowing = (req, res) => {
   Follow.fetch({ follower: req.query.facebook_id })
     .then(follows => follows.map(follow => follow.followed))
@@ -103,5 +118,6 @@ module.exports = {
   postFollow,
   getIsFollowing,
   getFollowers,
+  getFollowerIds,
   getFollowing,
 };
