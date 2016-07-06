@@ -32,7 +32,6 @@ const sendPostsByDate = function(req, res) {
     });
 };
 
-
 const getPostsByFriends = function(date, limit, user) {
   const qb = new QueryBuilder();
   const qb2 = new QueryBuilder();
@@ -65,27 +64,6 @@ const sendPostsByFriends = function(req, res) {
     });
 };
 
-const getPostsById = function(req, res) {
-  const arrayOfPostIds = JSON.parse(req.query.posts);
-  console.log(arrayOfPostIds);
-  const qb = new QueryBuilder();
-  const nested = new QueryBuilder();
-
-  nested.select({ what: '*', from: 'Post', whereIn: { 'Post.postId': arrayOfPostIds }, as: 'T1' });
-
-  qb
-    .select({ what: '*', from: nested.materialize() })
-    .innerJoin({ target: 'User', on: 'T1.User_facebook_id = User.facebook_id' })
-    .innerJoin({ target: 'Product', on: 'T1.Product_upc = Product.upc' })
-    .fire()
-    .then((results) => {
-      res.end(JSON.stringify(results));
-    })
-    .catch((err) => {
-      console.error(err);
-    });
-};
-
 const notifyRipple = function(post) {
   fetch(`${gobbleRippleUrl}/api/post`, {
     method: 'POST',
@@ -101,6 +79,18 @@ const notifyRipple = function(post) {
   .catch(err => {
     console.err(err);
   });
+};
+
+const addComment = function(comment) {
+  return Post.save(comment);
+};
+
+const postAddComment = function(req, res) {
+  console.log('here');
+  const comment = req.body;
+  addComment(comment)
+    .then(() => res.status(200).send({}))
+    .catch(() => res.status(400).send('Can\'t add comment'));
 };
 
 const postReview = function(req, res) {
@@ -276,6 +266,29 @@ const createDummyData = function(nUsers, nProducts, nPosts) {
     }
   }
 };
+
+const getPostsById = function(req, res) {
+  const arrayOfPostIds = JSON.parse(req.query.posts);
+  console.log(arrayOfPostIds);
+  const qb = new QueryBuilder();
+  const nested = new QueryBuilder();
+
+  nested.select({ what: '*', from: 'Post', whereIn: { 'Post.postId': arrayOfPostIds }, as: 'T1' });
+
+  qb
+    .select({ what: '*', from: nested.materialize() })
+    .innerJoin({ target: 'User', on: 'T1.User_facebook_id = User.facebook_id' })
+    .innerJoin({ target: 'Product', on: 'T1.Product_upc = Product.upc' })
+    .fire()
+    .then((results) => {
+      res.end(JSON.stringify(results));
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+// getPostsById([1,2,3]).then(res => console.log(res));
 // Post.save({ comment: 'top test', User_facebook_id: 1, Product_upc: 5, rating: 5 });
 // createDummyComments(200, 200, 200);
 // getAllReviews().then(res => console.log(res));
@@ -294,7 +307,8 @@ const createDummyData = function(nUsers, nProducts, nPosts) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, likePost, getCompressMedia, postCompressMedia, getPostsById };
+
+module.exports = { getPostsById, postAddComment, createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, likePost, getCompressMedia, postCompressMedia };
 // getPostsByFriends('2017-01-01 00:00:00', 10, 2).then(res => console.log('#######', res));
 // console.log(dateNow());
 // getPostsByFriends('2016-07-30 00:00:00', 10, 1).then(res => console.log('#######', res));

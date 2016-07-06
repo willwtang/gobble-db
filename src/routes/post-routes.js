@@ -5,6 +5,7 @@ const routes = app => {
   app.get('/db/post/friends', PostController.sendPostsByFriends);
   app.get('/db/post/parent', PostController.sendCommentsByParentId);
   app.get('/db/post/reviews', PostController.sendAllReviews);
+  app.post('/db/post/comment', PostController.postAddComment);
 };
 
 module.exports = routes;
