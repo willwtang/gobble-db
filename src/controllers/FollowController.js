@@ -114,10 +114,27 @@ const getFollowing = (req, res) => {
     });
 };
 
+const getFollowingIds = (req, res) => {
+  Follow.fetch({ follower: req.query.facebook_id })
+    .then(follows => follows.map(follow => follow.followed))
+    .then(followingIds => {
+      res.status(200).json(followingIds);
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({
+        description: 'Gobble DB - Follow.fetch - getFollowing',
+        error: err,
+      });
+    });
+};
+
+
 module.exports = {
   postFollow,
   getIsFollowing,
   getFollowers,
   getFollowerIds,
   getFollowing,
+  getFollowingIds,
 };

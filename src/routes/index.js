@@ -20,6 +20,7 @@ const routes = (app) => {
   app.get('/db/followers', FollowController.getFollowers);
   app.get('/db/follower_ids', FollowController.getFollowerIds);
   app.get('/db/following', FollowController.getFollowing);
+  app.get('/db/following_ids', FollowController.getFollowingIds);
   app.get('/db/is_following', FollowController.getIsFollowing);
 
   app.post('/db/review', PostController.postReview);
