@@ -25,6 +25,30 @@ const postFollow = (req, res) => {
     });
 };
 
+const deleteFollow = (req, res) => {
+  if (!req.body.follower || !req.body.followed) {
+    res.status(400).json('Invalid request body.');
+  } else {
+    const deletedFollow = {
+      follower: req.body.follower,
+      followed: req.body.followed,
+    };
+
+    Follow.destroy(deletedFollow)
+      .then(() => {
+        console.log('Delete follow success.');
+        res.sendStatus(204);
+      })
+      .catch(err => {
+        console.error(err);
+        res.status(500).json({
+          description: 'Gobble DB - Follow.destroy',
+          error: err,
+        });
+      });
+  }
+};
+
 const getIsFollowing = (req, res) => {
   const followerId = req.query.follower_id;
   const followedId = req.query.followed_id;
@@ -132,6 +156,7 @@ const getFollowingIds = (req, res) => {
 
 module.exports = {
   postFollow,
+  deleteFollow,
   getIsFollowing,
   getFollowers,
   getFollowerIds,
