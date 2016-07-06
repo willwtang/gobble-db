@@ -50,9 +50,8 @@ class Model {
 
   destroy(obj) {
     const qb = new QueryBuilder();
-    obj.table = this.tableName;
     return qb
-      .destroy(obj)
+      .destroy({ table: this.tableName, where: obj })
       .fire();
   }
 
