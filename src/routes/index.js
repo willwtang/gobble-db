@@ -30,6 +30,7 @@ const routes = (app) => {
   app.get('/db/getProductReviews', ProductController.getProductReviews);
 
   app.post('/db/live', LiveController.postLive);
+  app.post('/db/live_view', LiveController.incrementLiveView);
 };
 
 module.exports = routes;
