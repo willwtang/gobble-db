@@ -5,7 +5,7 @@ const getMediaByPostId = function(postId) {
 };
 
 const sendMediaByPostId = function(req, res) {
-  const postId = req.body.post_id;
+  const postId = req.query.post_id;
   return getMediaByPostId(postId)
     .then(results => res.send(results))
     .catch(err => console.log(`Error in sendMediaByPostId ${err}`));
