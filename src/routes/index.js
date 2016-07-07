@@ -2,6 +2,7 @@ const UserController = require('./../controllers/UserController');
 const PostController = require('./../controllers/PostController');
 const ProductController = require('./../controllers/ProductController');
 const FollowController = require('./../controllers/FollowController');
+const SearchController = require('./../controllers/SearchController');
 
 const routes = (app) => {
   app.get('/db/user', UserController.getUser);
@@ -23,6 +24,8 @@ const routes = (app) => {
   app.get('/db/compressMedia', PostController.getCompressMedia);
   app.post('/db/compressMedia', PostController.postCompressMedia);
   app.get('/db/postsById', PostController.getPostsById);
+
+  app.get('/db/search', SearchController.getSearchResults);
 };
 
 module.exports = routes;
