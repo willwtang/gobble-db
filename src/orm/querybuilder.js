@@ -77,9 +77,10 @@ class QueryBuilder {
   _where(conjunction, ...args) {
     let target;
     const first = args[0];
-    if (typeof first === 'string') {
+    const type = utility.type(first);
+    if (type === 'string') {
       target = args.join(' ');
-    } else if (typeof first === 'object') {
+    } else if (type === 'object') {
       target = this._parseEquailty(first);
     }
     this.sequence.push(`${conjunction} ${target}`);
@@ -106,12 +107,7 @@ class QueryBuilder {
     const results = [];
     for (let i = 0; i < columns.length; i++) {
       const column = columns[i];
-      const values = obj[column].map(value => {
-        if (utility.type(value) === 'string') {
-          return `'${value}'`;
-        }
-        return value;
-      });
+      const values = obj[column].map(value => utility.stringify(value));
       const query = `${column} IN (${values})`;
       results.push(query);
     }
