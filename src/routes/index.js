@@ -29,6 +29,7 @@ const routes = (app) => {
   app.get('/db/search', SearchController.getSearchResults);
   app.get('/db/getProductReviews', ProductController.getProductReviews);
 
+  app.get('/db/live_all', LiveController.getAllActive);
   app.post('/db/live', LiveController.postLive);
   app.post('/db/live_view', LiveController.incrementLiveView);
   app.post('/db/live_end', LiveController.endLive);

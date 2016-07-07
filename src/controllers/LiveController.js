@@ -1,4 +1,56 @@
 const { Live, User } = require('./../models');
+const { mapSeries } = require('async');
+
+const getUserById = (facebookId, callback) => {
+  User.fetch({ facebook_id: facebookId })
+    .then(results => results[0])
+    .then(fetchedUser => {
+      callback(null, fetchedUser);
+    })
+    .catch(err => {
+      callback(err, null);
+    });
+};
+
+const mergeUsersAndLives = (users, lives) => {
+  const merged = [];
+  lives.forEach((live, i) => {
+    merged.push(Object.assign({}, live, {
+      user: users[i],
+    }));
+  });
+  console.log(merged);
+  return merged;
+};
+
+const getAllActive = (req, res) => {
+  let activeLives;
+  let liveUsers;
+
+  Live.fetch({ active: 1 })
+    .then(activeLivesResults => {
+      activeLives = activeLivesResults;
+      return activeLives.map(activeLive => activeLive.User_facebook_id);
+    })
+    .then(liveUserIds => {
+      mapSeries(liveUserIds, getUserById, (err, liveUserResults) => {
+        if (!err) {
+          liveUsers = liveUserResults;
+          const responseJSON = mergeUsersAndLives(liveUsers, activeLives);
+          res.status(200).json(responseJSON);
+        } else {
+          throw Error(err);
+        }
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({
+        description: 'Gobble DB - Live, get all active',
+        error: err.message,
+      });
+    });
+};
 
 const postLive = (req, res) => {
   const postedLive = {
@@ -97,6 +149,7 @@ const endLive = (req, res) => {
 };
 
 module.exports = {
+  getAllActive,
   postLive,
   incrementLiveView,
   endLive,
