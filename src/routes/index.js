@@ -31,6 +31,7 @@ const routes = (app) => {
 
   app.post('/db/live', LiveController.postLive);
   app.post('/db/live_view', LiveController.incrementLiveView);
+  app.post('/db/live_end', LiveController.endLive);
 };
 
 module.exports = routes;
