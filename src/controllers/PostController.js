@@ -333,7 +333,7 @@ const sendPostsByUserId = function(req, res) {
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
 
-module.exports = { sendPostsByUserId, getPostsById, postAddComment, createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, likePost, getCompressMedia, postCompressMedia };
+module.exports = { sendPostsByUserId, postWish, getPostsById, postAddComment, createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, likePost, getCompressMedia, postCompressMedia };
 // getPostsByFriends('2017-01-01 00:00:00', 10, 2).then(res => console.log('#######', res));
 // console.log(dateNow());
 // getPostsByFriends('2016-07-30 00:00:00', 10, 1).then(res => console.log('#######', res));
