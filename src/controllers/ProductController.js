@@ -1,4 +1,4 @@
-const { Product, Category, ProductCategory, Tag, ProductTag, Ingredient, ProductIngredient, Media } = require('./../models');
+const { User, Post, Product, Category, ProductCategory, Tag, ProductTag, Ingredient, ProductIngredient, Media } = require('./../models');
 const QueryBuilder = require('../orm/querybuilder');
 
 const addCategories = (upc, categories) => {
@@ -381,6 +381,19 @@ const getProduct = (req, res) => {
     });
 };
 
+const getProductReviews = function(req, res) {
+  const upc = req.query.upc;
+  console.log('getting product reviews: ', upc);
+  (Post
+    .join({ table: User, on: `Post.rating IS NOT NULL AND Post.Product_upc = ${upc}` }))
+      .then(results => res.send(results))
+      .catch(err => {
+        console.log('Error getting product reviews', err);
+        res.status(404).send(err);
+      });
+};
+
+
 module.exports = {
-  postProduct, getProduct, getProductsByDate,
+  postProduct, getProduct, getProductsByDate, getProductReviews,
 };

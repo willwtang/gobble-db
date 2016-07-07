@@ -25,8 +25,8 @@ const routes = (app) => {
   app.get('/db/compressMedia', PostController.getCompressMedia);
   app.post('/db/compressMedia', PostController.postCompressMedia);
   app.get('/db/postsById', PostController.getPostsById);
-
   app.get('/db/search', SearchController.getSearchResults);
+  app.get('/db/getProductReviews', ProductController.getProductReviews);
 };
 
 module.exports = routes;
