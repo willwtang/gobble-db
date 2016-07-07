@@ -138,6 +138,19 @@ const postReview = function(req, res) {
   res.end();
 };
 
+const postWish = function(req, res) {
+  console.log('posting wish: ', req.body);
+  const post = req.body;
+  Post.save({ User_facebook_id: post.facebookId, Product_upc: post.upc })
+    .then((saveResult) => {
+      console.log('review saved!!!: ', saveResult);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+  res.end();
+};
+
 const updateLikeCache = function(postId) {
   Like.fetch({ Post_id: postId })
     .then((result) => {
@@ -308,8 +321,7 @@ const getPostsById = function(req, res) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-
-module.exports = { getPostsById, postAddComment, createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, likePost, getCompressMedia, postCompressMedia };
+module.exports = { getPostsById, postAddComment, createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, postWish, likePost, getCompressMedia, postCompressMedia };
 // getPostsByFriends('2017-01-01 00:00:00', 10, 2).then(res => console.log('#######', res));
 // console.log(dateNow());
 // getPostsByFriends('2016-07-30 00:00:00', 10, 1).then(res => console.log('#######', res));

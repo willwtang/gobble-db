@@ -17,6 +17,7 @@ const routes = (app) => {
   app.get('/db/is_following', FollowController.getIsFollowing);
 
   app.post('/db/review', PostController.postReview);
+  app.post('/db/wish', PostController.postWish);
   app.post('/db/product', ProductController.postProduct);
   app.get('/db/product', ProductController.getProduct);
   app.get('/db/productsByDate', ProductController.getProductsByDate);
@@ -24,8 +25,8 @@ const routes = (app) => {
   app.get('/db/compressMedia', PostController.getCompressMedia);
   app.post('/db/compressMedia', PostController.postCompressMedia);
   app.get('/db/postsById', PostController.getPostsById);
-
   app.get('/db/search', SearchController.getSearchResults);
+  app.get('/db/getProductReviews', ProductController.getProductReviews);
 };
 
 module.exports = routes;
