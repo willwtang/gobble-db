@@ -255,10 +255,8 @@ const getProductsByDate = function(req, res) {
   const date = req.query.date;
   const qb = new QueryBuilder();
   qb.select({ what: 'upc', from: 'Product', where: `Product.Product_created_at > ${date}` });
-  console.log(qb.materialize());
   qb.fire()
     .then((result) => {
-      console.log(result);
       const toReturn = [];
       let products = result.length;
       for (let i = 0; i < result.length; i++) {
