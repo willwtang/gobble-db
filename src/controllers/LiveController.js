@@ -73,7 +73,7 @@ const getLivesById = (facebookId, callback) => {
     });
 };
 
-const flattenAndSort = arr => arr.reduce((a, b) => a.concat(b), []).sort((a, b) => a.Live_created_at > b.Live_created_at);
+const flattenAndSort = arr => arr.reduce((a, b) => a.concat(b), []).sort((a, b) => a.Live_created_at < b.Live_created_at);
 
 const getLiveList = (req, res) => {
   const facebookId = req.query.facebook_id;
@@ -105,6 +105,7 @@ const postLive = (req, res) => {
     active: Number(req.body.active),
     peer_id: req.body.peer_id,
     views: req.body.views,
+    description: req.body.description,
   };
   let responseJSON = {};
 
@@ -151,6 +152,7 @@ const incrementLiveView = (req, res) => {
         active: Number(fetchedLive.active),
         peer_id: fetchedLive.peer_id,
         views: fetchedLive.views + 1,
+        description: fetchedLive.description,
       };
       return Live.save(updatedLive);
     })
@@ -180,6 +182,7 @@ const endLive = (req, res) => {
         active: 0,
         peer_id: fetchedLive.peer_id,
         views: fetchedLive.views,
+        description: fetchedLive.description,
       };
       return Live.save(updatedLive);
     })

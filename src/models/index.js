@@ -182,6 +182,7 @@ const Live = new Table('Live', live => {
   live.bigInt('User_facebook_id', 64, 'UNSIGNED');
   live.int('active', 64, 'UNSIGNED');
   live.int('views', 64, 'UNSIGNED');
+  live.text('description');
 
   live.foreignKey('Live_fk_User_facebook_id', 'User_facebook_id', 'User', 'facebook_id');
 
