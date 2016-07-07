@@ -288,7 +288,7 @@ const getPostsById = function(req, res) {
     });
 };
 
-Post.destroy({ postId: 1 });
+// Post.destroy({ postId: 1 });
 // getPostsById([1,2,3]).then(res => console.log(res));
 // Post.save({ comment: 'top test', User_facebook_id: 1, Product_upc: 5, rating: 5 });
 // createDummyComments(200, 200, 200);
