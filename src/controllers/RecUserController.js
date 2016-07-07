@@ -1,5 +1,5 @@
-const QueryBuilder = require('../orm/querybuilder');
-const { Post } = require('../models');
+const { Post, Product, Media } = require('../models');
+const Promise = require('bluebird');
 
 const getAllUserRatings = function() {
   // const qb = new QueryBuilder();
@@ -17,4 +17,32 @@ const sendAllUserRatings = function(req, res) {
     .catch(err => res.status(400).send(err));
 };
 
-module.exports = { sendAllUserRatings };
+const getProductsByIds = function(arrayOfIds) {
+  return Product.fetch({ upc: arrayOfIds }, ['upc', 'name', 'brand']);
+};
+
+const getImagesByIds = function(arrayOfIds) {
+  return getProductsByIds(arrayOfIds)
+    .then(products => {
+      const promises = [];
+      for (let i = 0; i < products.length; i++) {
+        const product = products[i];
+        const mediaFetch = Media.fetch({ Product_upc: product.upc })
+          .then(media => {
+            if (media.length) product.image = media[0].url;
+            return product;
+          })
+          .catch(err => console.log(err));
+        promises.push(mediaFetch);
+      }
+      return Promise.all(promises);
+    });
+};
+const sendProductsByIds = function(req, res) {
+  const upcs = req.query.upc;
+  getImagesByIds(upcs)
+    .then(results => res.send(results))
+    .catch(err => res.send(err));
+};
+
+module.exports = { sendAllUserRatings, sendProductsByIds };

@@ -1,9 +1,6 @@
 const { Product, Category, ProductCategory, Tag, ProductTag, Ingredient, ProductIngredient, Media } = require('./../models');
 const QueryBuilder = require('../orm/querybuilder');
 
-const getProductsById = function(arrayOfIds) {
-  
-};
 const addCategories = (upc, categories) => {
   for (let i = 0; i < categories.length; i++) {
     Category.fetch({ name: categories[i] })
