@@ -30,6 +30,7 @@ const routes = (app) => {
   app.get('/db/getProductReviews', ProductController.getProductReviews);
 
   app.get('/db/live_all', LiveController.getAllActive);
+  app.get('/db/live_list', LiveController.getLiveList);
   app.post('/db/live', LiveController.postLive);
   app.post('/db/live_view', LiveController.incrementLiveView);
   app.post('/db/live_end', LiveController.endLive);

@@ -1,5 +1,5 @@
-const { Live, User } = require('./../models');
-const { mapSeries } = require('async');
+const { Follow, Live, User } = require('./../models');
+const { mapSeries, map } = require('async');
 
 const getUserById = (facebookId, callback) => {
   User.fetch({ facebook_id: facebookId })
@@ -19,24 +19,23 @@ const mergeUsersAndLives = (users, lives) => {
       user: users[i],
     }));
   });
-  console.log(merged);
   return merged;
 };
 
 const getAllActive = (req, res) => {
   let activeLives;
-  let liveUsers;
+  let activeUsers;
 
   Live.fetch({ active: 1 })
     .then(activeLivesResults => {
       activeLives = activeLivesResults;
       return activeLives.map(activeLive => activeLive.User_facebook_id);
     })
-    .then(liveUserIds => {
-      mapSeries(liveUserIds, getUserById, (err, liveUserResults) => {
+    .then(activeUserIds => {
+      mapSeries(activeUserIds, getUserById, (err, activeUserResults) => {
         if (!err) {
-          liveUsers = liveUserResults;
-          const responseJSON = mergeUsersAndLives(liveUsers, activeLives);
+          activeUsers = activeUserResults;
+          const responseJSON = mergeUsersAndLives(activeUsers, activeLives);
           res.status(200).json(responseJSON);
         } else {
           throw Error(err);
@@ -47,6 +46,54 @@ const getAllActive = (req, res) => {
       console.error(err);
       res.status(500).json({
         description: 'Gobble DB - Live, get all active',
+        error: err.message,
+      });
+    });
+};
+
+const getLivesById = (facebookId, callback) => {
+  let lives;
+  let users;
+
+  Live.fetch({ User_facebook_id: facebookId })
+    .then(livesResults => {
+      lives = livesResults;
+      return lives.map(live => live.User_facebook_id);
+    })
+    .then(userIds => {
+      mapSeries(userIds, getUserById, (err, userResults) => {
+        if (!err) {
+          users = userResults;
+          const liveRows = mergeUsersAndLives(users, lives);
+          callback(null, liveRows);
+        } else {
+          callback(err, null);
+        }
+      });
+    });
+};
+
+const flattenAndSort = arr => arr.reduce((a, b) => a.concat(b), []).sort((a, b) => a.Live_created_at > b.Live_created_at);
+
+const getLiveList = (req, res) => {
+  const facebookId = req.query.facebook_id;
+
+  Follow.fetch({ follower: facebookId })
+    .then(follows => follows.map(follow => follow.followed))
+    .then(followingIds => {
+      map(followingIds, getLivesById, (err, liveListArrays) => {
+        if (!err) {
+          const liveList = flattenAndSort(liveListArrays);
+          res.status(200).json(liveList);
+        } else {
+          throw Error(err);
+        }
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({
+        description: 'Gobble DB - Live, get live list',
         error: err.message,
       });
     });
@@ -150,6 +197,7 @@ const endLive = (req, res) => {
 
 module.exports = {
   getAllActive,
+  getLiveList,
   postLive,
   incrementLiveView,
   endLive,
