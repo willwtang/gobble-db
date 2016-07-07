@@ -1,4 +1,4 @@
-const { Product, User, Review, Post, Media, Like } = require('../models');
+const { Product, User, Post, Media, Like } = require('../models');
 const QueryBuilder = require('../orm/querybuilder');
 const { dateNow, removeQuotes } = require('../lib/utility');
 
@@ -301,6 +301,17 @@ const getPostsById = function(req, res) {
     });
 };
 
+const getPostsByUserId = function(userId) {
+  return Post
+    .join({ table: User, on: { 'Post.User_facebook_id': 'User.facebook_id', User_facebook_id: userId } });
+};
+
+const sendPostsByUserId = function(req, res) {
+  const userId = req.query.facebookId;
+  return getPostsByUserId(userId)
+    .then(results => res.send(results))
+    .catch(err => console.log(err));
+};
 // Post.destroy({ postId: 1 });
 // getPostsById([1,2,3]).then(res => console.log(res));
 // Post.save({ comment: 'top test', User_facebook_id: 1, Product_upc: 5, rating: 5 });
@@ -321,7 +332,8 @@ const getPostsById = function(req, res) {
 // Follow.save({ follower: 1, followed: 2 });
 // Product.save({ upc: 20394892038402936 });
 // getPostsByFriends('2016-07-30 00:00:00', 20, 1).then(res => console.log(res));
-module.exports = { getPostsById, postAddComment, createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, postWish, likePost, getCompressMedia, postCompressMedia };
+
+module.exports = { sendPostsByUserId, getPostsById, postAddComment, createDummyComments, createDummyData, sendAllReviews, sendCommentsByParentId, sendPostsByFriends, sendPostsByDate, postReview, likePost, getCompressMedia, postCompressMedia };
 // getPostsByFriends('2017-01-01 00:00:00', 10, 2).then(res => console.log('#######', res));
 // console.log(dateNow());
 // getPostsByFriends('2016-07-30 00:00:00', 10, 1).then(res => console.log('#######', res));
