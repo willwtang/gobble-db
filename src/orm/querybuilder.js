@@ -78,12 +78,27 @@ class QueryBuilder {
     let target;
     const first = args[0];
     const type = utility.type(first);
+    let conjunction2 = conjunction;
     if (type === 'string') {
       target = args.join(' ');
     } else if (type === 'object') {
+      let flag = false;
+      const whereIn = {};
+      const keys = Object.keys(first);
+      keys.forEach(key => {
+        if (Array.isArray(first[key])) {
+          whereIn[key] = first[key];
+          delete first[key];
+          flag = true;
+        }
+      });
+      if (flag) {
+        this._whereIn(conjunction, whereIn);
+        conjunction2 = 'AND';
+      }
       target = this._parseEquailty(first);
     }
-    this.sequence.push(`${conjunction} ${target}`);
+    if (target) this.sequence.push(`${conjunction2} ${target}`);
     return this;
   }
 
@@ -111,7 +126,7 @@ class QueryBuilder {
       const query = `${column} IN (${values})`;
       results.push(query);
     }
-    this.sequence.push(`${conjunction} ${results.join(' AND ')}`);
+    if (results.length) this.sequence.push(`${conjunction} ${results.join(' AND ')}`);
     return this;
   }
 
