@@ -178,10 +178,14 @@ const Media = new Table('Media', media => {
 });
 
 const Live = new Table('Live', live => {
-  live.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
+  live.varChar('peer_id', 255).primaryKey();
+  live.bigInt('User_facebook_id', 64, 'UNSIGNED');
   live.int('active', 64, 'UNSIGNED');
-  live.varChar('peer_id', 255);
   live.int('views', 64, 'UNSIGNED');
+
+  live.foreignKey('Live_fk_User_facebook_id', 'User_facebook_id', 'User', 'facebook_id');
+
+  live.timestamp();
 });
 
 // const Review = new Table('Review', review => {
