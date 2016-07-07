@@ -177,6 +177,13 @@ const Media = new Table('Media', media => {
   media.timestamp();
 });
 
+const Live = new Table('Live', live => {
+  live.int('id', 64, 'UNSIGNED').autoIncrement().primaryKey();
+  live.int('active', 64, 'UNSIGNED');
+  live.varChar('peer_id', 255);
+  live.int('views', 64, 'UNSIGNED');
+});
+
 // const Review = new Table('Review', review => {
 //   review.int('reviewId', 64, 'UNSIGNED').autoIncrement().primaryKey();
 //   review.int('Post_id', 64, 'UNSIGNED');
@@ -214,4 +221,4 @@ const Media = new Table('Media', media => {
 // Product.join({ table: Brand, on: { 'Product.Brand_id': 'Brand.id' } }).then(res => console.log(res));
 // Product.match({ upc: [20394892038402934, 23894238974] }).then(res => console.log(res));
 
-module.exports = { User, Product, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, ProductIngredient, Follow, Like };
+module.exports = { User, Product, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, ProductIngredient, Follow, Like, Live };
