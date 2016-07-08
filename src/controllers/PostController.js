@@ -9,9 +9,10 @@ const gobbleRippleUrl = process.env.GOBBLE_RIPPLE_URL;
 const getPostsByDate = function(date, limit) {
   const qb = new QueryBuilder();
   const qb2 = new QueryBuilder();
+  const columns = ['T1.postId', 'T1.likesCache', 'T1.comment', 'T1.rating', 'Product.upc', 'Product.name', 'User.facebook_id', 'User.first_name', 'User.last_name', 'User.photo_url', 'User.display_name'];
   qb2.select({ what: '*', from: 'Post', where: `parentId IS NULL AND date(Post.Post_created_at) < STR_TO_DATE('${date}', '%Y-%m-%d %H:%i:%s')`, orderBy: 'Post_created_at', as: 'T1' });
   return (qb
-    .select({ what: '*', from: qb2.materialize() })
+    .select({ what: columns, from: qb2.materialize() })
     .innerJoin({ target: 'User', on: { 'User.facebook_id': 'T1.User_facebook_id' } })
     .leftJoin({ target: 'Product', on: { 'T1.Product_upc': 'Product.upc' } })
     .orderBy('T1.Post_created_at DESC')
@@ -37,7 +38,7 @@ const getPostsByFriends = function(date, limit, user) {
   const qb2 = new QueryBuilder();
   qb2.select({ what: 'followed', from: 'Follow', where: `Follow.follower = ${user}`, as: 'T1' });
   return (qb
-    .select({ what: '*', from: qb2.materialize() })
+    .select({ what: ['Post.postId', 'Post.likesCache', 'Post.comment', 'Post.rating', 'Product.upc', 'Product.name', 'User.facebook_id', 'User.first_name', 'User.last_name', 'User.photo_url', 'User.display_name'], from: qb2.materialize() })
     .innerJoin({ target: 'User', on: { 'User.facebook_id': 'T1.followed' } })
     .innerJoin({ target: 'Post', on: `Post.parentId IS NULL AND T1.followed = Post.User_facebook_id AND date(Post.Post_created_at) < STR_TO_DATE('${date}', '%Y-%m-%d %H:%i:%s')` })
     .leftJoin({ target: 'Product', on: { 'Post.Product_upc': 'Product.upc' } })
