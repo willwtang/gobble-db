@@ -63,12 +63,7 @@ class QueryBuilder {
     //   columns: { columnName: value }
     // }
     const columns = Object.keys(obj.columns);
-    const values = columns.map(key => {
-      if (typeof obj.columns[key] === 'string') {
-        return `'${obj.columns[key]}'`;
-      }
-      return obj.columns[key];
-    });
+    const values = columns.map(key => utility.stringify(obj.columns[key]));
     const query = `INSERT INTO ${obj.table} (${columns.join(',')}) VALUES (${values.join(',')}) ON DUPLICATE KEY UPDATE ${columns.map(column => `${column} = VALUES(${column})`).join(',')}`;
     this.sequence.push(query);
     return this;
