@@ -8,7 +8,7 @@ const getAllUserRatings = function() {
 //   return qb
 //     .select({ what: ['T1.User_facebook_id', 'T1.rating', 'Product.name', 'Product.upc'], from: qb2.materialize() })
 //     .fire();
-  return Post.fetch('rating IS NOT NULL', ['User_facebook_id', 'rating', 'Product_upc']);
+  return Post.fetch('rating IS NOT NULL and Product_upc IS NOT NULL', ['User_facebook_id', 'rating', 'Product_upc']);
 };
 
 const sendAllUserRatings = function(req, res) {
