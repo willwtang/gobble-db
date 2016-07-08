@@ -304,7 +304,7 @@ const getPostsById = function(req, res) {
 
 const getPostsByUserId = function(userId) {
   return Post
-    .join({ table: User, on: { 'Post.User_facebook_id': 'User.facebook_id', User_facebook_id: userId } });
+    .join({ table: User, on: `Post.User_facebook_id = User.facebook_id AND User_facebook_id = ${userId} AND Post.parentId IS NULL` });
 };
 
 const sendPostsByUserId = function(req, res) {
