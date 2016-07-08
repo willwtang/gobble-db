@@ -98,6 +98,7 @@ class QueryBuilder {
   }
 
   where(...args) {
+    if (!args.length) return this;
     return this._where('WHERE', ...args);
   }
 
