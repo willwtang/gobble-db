@@ -3,6 +3,7 @@ const PostController = require('./../controllers/PostController');
 const ProductController = require('./../controllers/ProductController');
 const FollowController = require('./../controllers/FollowController');
 const SearchController = require('./../controllers/SearchController');
+const LiveController = require('./../controllers/LiveController');
 
 const routes = (app) => {
   app.get('/db/user', UserController.getUser);
@@ -27,6 +28,12 @@ const routes = (app) => {
   app.get('/db/postsById', PostController.getPostsById);
   app.get('/db/search', SearchController.getSearchResults);
   app.get('/db/getProductReviews', ProductController.getProductReviews);
+
+  app.get('/db/live_all', LiveController.getAllActive);
+  app.get('/db/live_list', LiveController.getLiveList);
+  app.post('/db/live', LiveController.postLive);
+  app.post('/db/live_view', LiveController.incrementLiveView);
+  app.post('/db/live_end', LiveController.endLive);
 };
 
 module.exports = routes;
