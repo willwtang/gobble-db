@@ -203,17 +203,20 @@ const getCompressMedia = function(req, res) {
     })
     .catch((err) => {
       console.error(err);
+      res.status(500);
       res.end();
     });
 };
 
 const postCompressMedia = function(req, res) {
   Media.save({ id: req.body.imageId, urlCompressed: req.body.compressedUrl })
-    .then((result) => {
-      console.log(result);
+    .then(() => {
+      console.log(`Compressed image: ${req.body.compressedUrl} posted to db`);
     })
     .catch((err) => {
-      console.log(err);
+      console.log(`Error posting compressed image to db: ${err}`);
+      res.status(500);
+      res.end();
     });
   res.end();
 };

@@ -189,41 +189,4 @@ const Live = new Table('Live', live => {
   live.timestamp();
 });
 
-// const Review = new Table('Review', review => {
-//   review.int('reviewId', 64, 'UNSIGNED').autoIncrement().primaryKey();
-//   review.int('Post_id', 64, 'UNSIGNED');
-//   review.bigInt('Product_upc', 64, 'UNSIGNED');
-//   review.int('rating');
-//   review.bigInt('User_facebook_id', 64, 'UNSIGNED');
-//   review.timestamp();
-
-//   review.foreignKey('Review_fk_Product_upc', 'Product_upc', 'Product', 'upc');
-//   review.foreignKey('Review_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
-//   review.foreignKey('Review_fk_Post_id', 'Post_id', 'Post', 'id');
-// });
-
-// const Wish = new Table('Wish', wish => {
-//   wish.int('wishId', 64, 'UNSIGNED').autoIncrement().primaryKey();
-//   wish.int('Post_id', 64, 'UNSIGNED');
-//   wish.bigInt('Product_upc', 64, 'UNSIGNED');
-//   wish.bigInt('User_facebookId', 64, 'UNSIGNED');
-//   wish.foreignKey('Wish_fk_Product_upc', 'Product_upc', 'Product', 'upc');
-//   wish.foreignKey('Wish_fk_User_facebookId', 'User_facebookId', 'User', 'facebookId');
-//   wish.foreignKey('Wish_fk_Post_id', 'Post_id', 'Post', 'id');
-
-//   wish.timestamp();
-// });
-
-// Product.save({ upc: 20394892038402934, name: 'cereal', Brand_id: 1 });
-// Product.save({ upc: 23894238974, name: 'cereal', Brand_id: 1 });
-// Brand.save({ name: 'Kellog' });
-
-// Review.save({ Post_id: 1, Product_upc: 20394892038402934, rating: 5 });
-// Post.save({ id: 1, User_facebookId: 1, likesCache: 10, comment: 'test' });
-
-// Post.join({ table: Review, on: { 'Post.id': 'Review.Post_id' } }, { table: Product, on: { 'Review.Product_upc': 'Product.upc' } }, { table: User, on: { 'Post.User_facebookId': 'User.facebookId' } }).then(res => console.log(res));
-// Product.fetch({ upc: 20394892038402934 }).then(res => console.log(res));
-// Product.join({ table: Brand, on: { 'Product.Brand_id': 'Brand.id' } }).then(res => console.log(res));
-// Product.match({ upc: [20394892038402934, 23894238974] }).then(res => console.log(res));
-
 module.exports = { User, Product, Category, ProductCategory, Ingredient, Tag, ProductTag, Media, Post, ProductIngredient, Follow, Like, Live };
